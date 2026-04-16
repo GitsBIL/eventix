@@ -13,7 +13,9 @@ class GoogleController extends Controller
     // 1. Ngelempar user ke halaman login Google
     public function redirect()
     {
-        return Socialite::driver('google')->redirect();
+        return Socialite::driver('google')
+            ->with(['prompt' => 'select_account']) // <--- INI BUMBUNYA CUY!
+            ->redirect();
     }
 
     // 2. Nerima balasan dari Google pas user sukses login

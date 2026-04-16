@@ -16,6 +16,11 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
         ]);
 
+        $middleware->alias([
+            'role' => \App\Http\Middleware\RoleMiddleware::class,
+            '2fa_check' => \App\Http\Middleware\Check2FA::class, // <--- TAMBAHIN INI
+        ]);
+
         //
     })
     ->withExceptions(function (Exceptions $exceptions): void {

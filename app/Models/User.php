@@ -24,6 +24,8 @@ class User extends Authenticatable
         'password',
         'google_id',
         'Role',
+        'google2fa_secret', // <-- Tambahin ini
+        'is_2fa_active',
     ];
 public $timestamps = false;
 protected $primaryKey = 'ID';
