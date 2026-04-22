@@ -86,12 +86,13 @@ const Content = ({
     );
 };
 
+// 🔥 INI BAGIAN YANG DIREVISI BIAR GAK SILAU
 const DropdownLink = ({ className = '', children, ...props }) => {
     return (
         <Link
             {...props}
             className={
-                'block w-full px-4 py-2 text-start text-sm leading-5 text-gray-700 transition duration-150 ease-in-out hover:bg-gray-100 focus:bg-gray-100 focus:outline-none ' +
+                'block w-full px-4 py-2 text-start text-sm leading-5 text-gray-400 transition duration-150 ease-in-out hover:text-[#e8ff47] hover:bg-white/5 focus:bg-white/10 focus:outline-none ' +
                 className
             }
         >
