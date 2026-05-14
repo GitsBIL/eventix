@@ -10,11 +10,10 @@ use Illuminate\Support\Str;
 
 class GoogleController extends Controller
 {
-    // 1. Ngelempar user ke halaman login Google
     public function redirect()
     {
         return Socialite::driver('google')
-            ->with(['prompt' => 'select_account']) // <--- INI BUMBUNYA CUY!
+            ->with(['prompt' => 'select_account']) 
             ->redirect();
     }
 
@@ -27,12 +26,10 @@ class GoogleController extends Controller
         $user = User::where('email', $googleUser->email)->first();
 
         if ($user) {
-            // Kalau udah ada, update aja google_id-nya
             $user->update(['google_id' => $googleUser->id]);
         } else {
-            // Kalau belum ada, bikin akun baru!
             $user = User::create([
-                'FullName' => $googleUser->name, // <--- INI WAJIB FullName (Huruf F dan N besar)
+                'FullName' => $googleUser->name, 
                 'email' => $googleUser->email,
                 'google_id' => $googleUser->id,
                 'password' => bcrypt(\Illuminate\Support\Str::random(16)),
@@ -40,7 +37,6 @@ class GoogleController extends Controller
             ]);
         }
 
-        // Paksa user login ke sistem kita
         Auth::login($user);
 
         // Arahin ke halaman dashboard

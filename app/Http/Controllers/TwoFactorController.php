@@ -26,20 +26,18 @@ class TwoFactorController extends Controller
 
         // Bikin URL khusus standar Google Authenticator
         $qrCodeUrl = $google2fa->getQRCodeUrl(
-            'Eventix', // Nama web lu
-            $user->email, // Email user
-            $user->google2fa_secret // Kunci rahasianya
+            'Eventix', 
+            $user->email, 
+            $user->google2fa_secret 
         );
 
-        // Ubah URL tadi jadi gambar QR Code (Format SVG) biar nggak pecah
         $renderer = new ImageRenderer(
-            new RendererStyle(250), // Ukuran gambar QR-nya 250px
+            new RendererStyle(250), 
             new SvgImageBackEnd()
         );
         $writer = new Writer($renderer);
         $qrCodeSvg = $writer->writeString($qrCodeUrl);
 
-        // Lempar gambar QR dan kode rahasianya ke layar depan (React)
         return Inertia::render('Auth/TwoFactorSetup', [
             'qrCodeSvg' => $qrCodeSvg,
             'secretKey' => $user->google2fa_secret
@@ -86,10 +84,8 @@ class TwoFactorController extends Controller
         $google2fa = new Google2FA();
 
         if ($google2fa->verifyKey(Auth::user()->google2fa_secret, $request->code)) {
-            // Kalau benar, kasih stempel LUNAS di Session!
             session(['2fa_verified' => true]); 
             
-            // Cek jabatannya, lalu lempar ke ruangan masing-masing
             if (Auth::user()->Role === 'Admin') {
                 return redirect()->route('admin.dashboard');
             }

@@ -2,16 +2,23 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
+
+    /**
+     * Tentukan primary key custom.
+     */
+    protected $primaryKey = 'ID';
+
+    /**
+     * Nonaktifkan fitur timestamps (created_at & updated_at) otomatis.
+     */
+    public $timestamps = false;
 
     /**
      * The attributes that are mass assignable.
@@ -24,11 +31,10 @@ class User extends Authenticatable
         'password',
         'google_id',
         'Role',
-        'google2fa_secret', // <-- Tambahin ini
+        'google2fa_secret',
         'is_2fa_active',
     ];
-public $timestamps = false;
-protected $primaryKey = 'ID';
+
     /**
      * The attributes that should be hidden for serialization.
      *

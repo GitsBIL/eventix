@@ -22,6 +22,15 @@ export default function AuthenticatedLayout({ user, header, children }) {
                         </div>
 
                         <div className="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                            {/* MENU HOME */}
+                            <NavLink href={route('home')} active={route().current('home')} className="text-gray-400 hover:text-[#e8ff47]">
+                                Home
+                            </NavLink>
+                            {/* MENU MY TICKETS */}
+                            <NavLink href={route('customer.dashboard')} active={route().current('customer.dashboard')} className="text-gray-400 hover:text-[#e8ff47]">
+                                My Tickets
+                            </NavLink>
+                            {/* MENU CONSOLE (ADMIN/SYSTEM) */}
                             <NavLink href={route('dashboard')} active={route().current('dashboard')} className="text-gray-400 hover:text-[#e8ff47]">
                                 Console
                             </NavLink>
@@ -73,6 +82,12 @@ export default function AuthenticatedLayout({ user, header, children }) {
                 {/* Mobile Menu */}
                 <div className={(showingNavigationDropdown ? 'block' : 'hidden') + ' sm:hidden'}>
                     <div className="pt-2 pb-3 space-y-1">
+                        <ResponsiveNavLink href={route('home')} active={route().current('home')} className="text-gray-300">
+                            Home
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink href={route('customer.dashboard')} active={route().current('customer.dashboard')} className="text-gray-300">
+                            My Tickets
+                        </ResponsiveNavLink>
                         <ResponsiveNavLink href={route('dashboard')} active={route().current('dashboard')} className="text-gray-300">
                             Console
                         </ResponsiveNavLink>

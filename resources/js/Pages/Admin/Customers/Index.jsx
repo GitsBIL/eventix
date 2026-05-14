@@ -1,0 +1,1 @@
+export default function Index() { return <div className="p-10 text-white">Halaman Sedang Dibuat Cuy!</div> }

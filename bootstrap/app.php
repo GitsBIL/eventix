@@ -18,11 +18,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
-            '2fa_check' => \App\Http\Middleware\Check2FA::class, // <--- TAMBAHIN INI
+            '2fa_check' => \App\Http\Middleware\Check2FA::class, 
         ]);
 
-        //
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
     })->create();
