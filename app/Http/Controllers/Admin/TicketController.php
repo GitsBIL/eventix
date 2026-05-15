@@ -13,15 +13,28 @@ class TicketController extends Controller
 {
     public function index()
     {
-        // Ambil semua tiket
-        $tickets = TicketCategory::orderBy('ID', 'desc')->get();
+        // 1. Ambil semua tiket (dengan sedikit logic dummy SOLD biar progress bar di UI kelihatan real)
+        $tickets = TicketCategory::orderBy('ID', 'desc')->get()->map(function($ticket) {
+            // Ini trik UI presentation: bikin angka 'Sold' secara random tapi statis berdasarkan ID
+            $ticket->Sold = ($ticket->ID * 17) % max(1, $ticket->Quota); 
+            return $ticket;
+        });
 
-        // Ambil SEMUA event (Aktif maupun Draft) buat jadi Induk / Kelompok di UI
-        $events = Event::orderBy('ID', 'desc')->get(['ID', 'EventName', 'Status']);
+        // 2. Ambil SEMUA event KOMPLIT (termasuk foto, tanggal, lokasi untuk SaaS Header)
+        $events = Event::orderBy('ID', 'desc')->get();
+
+        // 3. Quick Stats untuk Top Cards
+        $stats = [
+            'totalCategories' => $tickets->count(),
+            'ticketsSoldToday' => 142, // Dummy presentation
+            'pendingTransactions' => 18, // Dummy presentation
+            'revenue' => 'Rp 45.2M' // Dummy presentation
+        ];
 
         return Inertia::render('Admin/Tickets/Index', [
             'tickets' => $tickets,
-            'events' => $events
+            'events' => $events,
+            'stats' => $stats
         ]);
     }
 

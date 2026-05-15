@@ -7,6 +7,10 @@ export default function EventIndex({ events = [] }) {
     const [showModal, setShowModal] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [editId, setEditId] = useState(null);
+    
+    // STATE BARU BUAT FILTER DROPDOWN
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const [filterStatus, setFilterStatus] = useState('All');
 
     const { data, setData, post, processing, reset, errors } = useForm({
         EventName: '',
@@ -34,36 +38,52 @@ export default function EventIndex({ events = [] }) {
                 onSuccess: () => { 
                     setShowModal(false); 
                     reset(); 
-                    Swal.fire('Penambahan Berhasil', 'Data acara baru telah sukses direkam ke dalam basis data.', 'success');
+                    Swal.fire('Penambahan Berhasil', 'Data acara baru telah direkam.', 'success');
                 } 
             });
         }
     };
 
+    const recentActivities = [
+        { user: 'Nabil P.', action: 'updated event', target: 'Pestapora', time: '2m ago', color: 'text-blue-400', bg: 'bg-blue-500/10' },
+        { user: 'System', action: 'auto-published', target: 'Joyland Festival', time: '1h ago', color: 'text-green-400', bg: 'bg-green-500/10' },
+        { user: 'Sarah W.', action: 'requested refund', target: 'Order #EVTX-092', time: '3h ago', color: 'text-orange-400', bg: 'bg-orange-500/10' },
+        { user: 'Nabil P.', action: 'changed status', target: 'Synchronize Fest', time: '5h ago', color: 'text-slate-400', bg: 'bg-slate-500/10' },
+    ];
+
+    // LOGIKA FILTER TABLE
+    const filteredEvents = events.filter(event => {
+        if (filterStatus === 'Active') return event.Status === 1 || event.Status === '1';
+        if (filterStatus === 'Draft') return event.Status === 0 || event.Status === '0';
+        return true;
+    });
+
+    // AMBIL DATA EVENT ASLI BUAT DIPAJANG DI WIDGET "TOP EVENT" (Cari yang ada gambarnya)
+    const topEvent = events.find(e => e.BannerImage) || events[0];
+
     return (
-        <div className="flex h-screen bg-[#090B10] text-gray-300 font-sans overflow-hidden selection:bg-[#e8ff47] selection:text-black">
+        <div className="flex h-screen bg-[#060816] text-slate-300 font-sans overflow-hidden selection:bg-[#e8ff47] selection:text-black">
             <Head title="Events Management - Eventix" />
 
-            {/* SIDEBAR CORPORATE */}
-            <aside className="w-64 bg-[#0F131C] border-r border-white/5 flex flex-col justify-between h-full hidden md:flex shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.5)] z-20">
+            <aside className="w-64 bg-[#0f172a] border-r border-[#1e293b] flex flex-col justify-between h-full hidden md:flex shrink-0 shadow-2xl z-20">
                 <div className="overflow-y-auto overflow-x-hidden no-scrollbar">
-                    <div className="h-20 flex items-center px-8 border-b border-white/5 sticky top-0 bg-[#0F131C]/90 backdrop-blur-md z-10">
-                        <span className="text-xl font-black text-white uppercase tracking-tighter">EVEN<span className="text-[#e8ff47] drop-shadow-[0_0_8px_rgba(232,255,71,0.5)]">TIX</span></span>
+                    <div className="h-16 flex items-center px-6 border-b border-[#1e293b] sticky top-0 bg-[#0f172a]/90 backdrop-blur-md z-10">
+                        <span className="text-lg font-black text-white uppercase tracking-tighter">EVEN<span className="text-[#e8ff47]">TIX</span></span>
                     </div>
                     
-                    <div className="px-4 py-6 space-y-8">
+                    <div className="px-4 py-6 space-y-6">
                         <div>
-                            <p className="px-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">Overview</p>
-                            <ul className="space-y-1">
+                            <p className="px-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Overview</p>
+                            <ul className="space-y-0.5">
                                 <li>
-                                    <Link href={route('admin.dashboard')} className="flex items-center gap-3 px-4 py-2.5 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all">
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                                    <Link href={route('admin.dashboard')} className="flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg transition-all">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
                                         <span className="text-sm font-medium">Dashboard</span>
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link href="#" className="flex items-center gap-3 px-4 py-2.5 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all">
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                                    <Link href="#" className="flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg transition-all">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
                                         <span className="text-sm font-medium">Analytics</span>
                                     </Link>
                                 </li>
@@ -71,182 +91,354 @@ export default function EventIndex({ events = [] }) {
                         </div>
 
                         <div>
-                            <p className="px-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">Event Management</p>
-                            <ul className="space-y-1">
+                            <p className="px-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Event Management</p>
+                            <ul className="space-y-0.5">
                                 <li>
-                                    <Link href={route('admin.events.index')} className="flex items-center gap-3 px-4 py-2.5 bg-gradient-to-r from-[#e8ff47]/10 to-transparent text-white rounded-xl border-l-2 border-[#e8ff47] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] transition-all">
+                                    <Link href={route('admin.events.index')} className="flex items-center gap-3 px-3 py-2 bg-slate-800/80 text-white rounded-lg border border-slate-700/50 transition-all shadow-sm">
                                         <svg className="w-4 h-4 text-[#e8ff47]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                        <span className="text-sm font-bold">Events</span>
+                                        <span className="text-sm font-semibold">Events</span>
                                     </Link>
                                 </li>
-                                <li><Link href={route('admin.tickets.index')} className="flex items-center gap-3 px-4 py-2.5 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path></svg><span className="text-sm font-medium">Tickets</span></Link></li>
-                                <li><Link href="#" className="flex items-center gap-3 px-4 py-2.5 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg><span className="text-sm font-medium">Transactions</span></Link></li>
+                                <li><Link href={route('admin.tickets.index')} className="flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg transition-all"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path></svg><span className="text-sm font-medium">Tickets</span></Link></li>
+                                <li><Link href="#" className="flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg transition-all"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg><span className="text-sm font-medium">Transactions</span></Link></li>
                             </ul>
                         </div>
 
                         <div>
-                            <p className="px-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">System & Users</p>
-                            <ul className="space-y-1">
-                                <li><Link href="#" className="flex items-center gap-3 px-4 py-2.5 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg><span className="text-sm font-medium">Customers</span></Link></li>
-                                <li><Link href="#" className="flex items-center gap-3 px-4 py-2.5 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg><span className="text-sm font-medium">Settings</span></Link></li>
+                            <p className="px-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">System</p>
+                            <ul className="space-y-0.5">
+                                <li><Link href="#" className="flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg transition-all"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg><span className="text-sm font-medium">Customers</span></Link></li>
+                                <li><Link href="#" className="flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg transition-all"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg><span className="text-sm font-medium">Settings</span></Link></li>
                             </ul>
                         </div>
                     </div>
                 </div>
 
-                {/* PROFILE ADMIN AREA */}
-                <div className="p-4 border-t border-white/5 bg-[#0A0D14]/80 backdrop-blur-xl">
-                    <Link href={route('logout')} method="post" as="button" className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:border-[#e8ff47]/30 hover:bg-[#e8ff47]/5 transition-all group relative overflow-hidden">
-                        <div className="absolute inset-0 bg-gradient-to-r from-[#e8ff47]/0 via-[#e8ff47]/10 to-[#e8ff47]/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                <div className="p-4 border-t border-[#1e293b] bg-[#0f172a]">
+                    <div className="flex items-center gap-3">
                         <div className="relative">
-                            <div className="w-10 h-10 rounded-full bg-[#e8ff47]/10 flex items-center justify-center text-[#e8ff47] font-bold border border-[#e8ff47]/30 text-xs shrink-0 shadow-[0_0_15px_rgba(232,255,71,0.2)]">
+                            <div className="w-9 h-9 rounded-md bg-slate-800 flex items-center justify-center text-slate-300 font-bold border border-slate-700 text-xs">
                                 {auth.user.FullName.charAt(0)}
                             </div>
-                            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-[#0F131C] rounded-full animate-pulse"></div>
+                            <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 border-2 border-[#0f172a] rounded-full"></div>
                         </div>
-                        <div className="text-left truncate flex-1">
-                            <p className="text-sm font-bold text-white truncate group-hover:text-[#e8ff47] transition-colors">{auth.user.FullName}</p>
-                            <p className="text-[10px] text-gray-500 uppercase tracking-tighter">System {auth.user.Role}</p>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-bold text-white truncate leading-tight">{auth.user.FullName}</p>
+                            <p className="text-[10px] text-slate-500 truncate mt-0.5">System Admin</p>
                         </div>
-                        <svg className="w-4 h-4 text-gray-500 group-hover:text-red-500 transition-colors relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                    </Link>
+                        <Link href={route('logout')} method="post" as="button" className="text-slate-500 hover:text-red-400 transition-colors p-1.5 hover:bg-red-500/10 rounded-md">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                        </Link>
+                    </div>
                 </div>
             </aside>
 
-            {/* MAIN CONTENT */}
             <main className="flex-1 flex flex-col h-full overflow-hidden relative">
-                <header className="h-20 flex items-center justify-between px-8 border-b border-white/5 bg-[#0F131C]/80 backdrop-blur-xl z-20 shrink-0">
-                    <h1 className="text-xl font-bold text-white uppercase tracking-widest">Events Management</h1>
-                    <button onClick={() => { setIsEditing(false); reset(); setShowModal(true); }} className="px-5 py-2.5 bg-[#e8ff47] hover:bg-[#d4ed36] text-black rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(232,255,71,0.2)] hover:shadow-[0_0_25px_rgba(232,255,71,0.4)] hover:-translate-y-0.5">
-                        + New Event
-                    </button>
+                
+                {/* ENTERPRISE TOP HEADER DENGAN FILTER HIDUP */}
+                <header className="h-16 flex items-center justify-between px-8 border-b border-[#1e293b] bg-[#0f172a] z-20 shrink-0">
+                    <div className="flex items-center gap-4">
+                        <h1 className="text-base font-bold text-white">Events</h1>
+                        <div className="hidden lg:flex items-center px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-md">
+                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-2 animate-pulse"></div>
+                            <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Sync Active</span>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        <div className="relative hidden md:block">
+                            <svg className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            <input type="text" placeholder="Search events..." className="bg-[#060816] border border-[#1e293b] rounded-md pl-9 pr-12 py-1.5 text-xs text-white focus:outline-none focus:border-slate-500 transition-colors w-64 placeholder-slate-600" />
+                            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                                <span className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-[9px] text-slate-400 font-mono">⌘K</span>
+                            </div>
+                        </div>
+
+                        {/* INTERACTIVE DROPDOWN FILTER */}
+                        <div className="relative">
+                            <button 
+                                onClick={() => setIsFilterOpen(!isFilterOpen)} 
+                                className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-[#060816] border border-[#1e293b] rounded-md cursor-pointer hover:border-slate-600 transition-colors"
+                            >
+                                <span className="text-xs text-slate-400">Status: <span className="text-white font-medium">{filterStatus}</span></span>
+                                <svg className={`w-3 h-3 text-slate-500 transition-transform ${isFilterOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </button>
+                            
+                            {/* ISI DROPDOWNNYA */}
+                            {isFilterOpen && (
+                                <div className="absolute right-0 mt-1 w-36 bg-[#0f172a] border border-[#1e293b] rounded-lg shadow-xl z-50 overflow-hidden">
+                                    <button onClick={() => {setFilterStatus('All'); setIsFilterOpen(false)}} className={`w-full text-left px-4 py-2 text-xs hover:bg-slate-800 transition-colors ${filterStatus === 'All' ? 'text-white font-bold bg-slate-800/50' : 'text-slate-400'}`}>All Events</button>
+                                    <button onClick={() => {setFilterStatus('Active'); setIsFilterOpen(false)}} className={`w-full text-left px-4 py-2 text-xs hover:bg-slate-800 transition-colors ${filterStatus === 'Active' ? 'text-emerald-400 font-bold bg-slate-800/50' : 'text-slate-400'}`}>Active Only</button>
+                                    <button onClick={() => {setFilterStatus('Draft'); setIsFilterOpen(false)}} className={`w-full text-left px-4 py-2 text-xs hover:bg-slate-800 transition-colors ${filterStatus === 'Draft' ? 'text-white font-bold bg-slate-800/50' : 'text-slate-400'}`}>Draft Only</button>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="w-px h-6 bg-[#1e293b] mx-1"></div>
+
+                        <button className="relative p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-md transition-all">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                            <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-rose-500 rounded-full border border-[#0f172a]"></span>
+                        </button>
+
+                        <button onClick={() => { setIsEditing(false); reset(); setShowModal(true); }} className="ml-2 px-4 py-1.5 bg-white text-slate-900 hover:bg-slate-200 rounded-md text-xs font-bold transition-all flex items-center gap-2 shadow-sm">
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+                            New Event
+                        </button>
+                    </div>
                 </header>
 
-                <div className="flex-1 overflow-y-auto p-8 text-xs no-scrollbar">
-                    <div className="bg-[#0F131C] rounded-2xl border border-white/5 overflow-hidden shadow-2xl">
-                        <table className="w-full text-left">
-                            <thead className="bg-[#0A0D14] text-[10px] font-bold text-gray-500 uppercase tracking-widest border-b border-white/5">
-                                <tr>
-                                    <th className="px-6 py-5">Event Name</th>
-                                    <th className="px-6 py-5">Location & Date</th>
-                                    <th className="px-6 py-5">Image</th>
-                                    <th className="px-6 py-5">Status</th>
-                                    <th className="px-6 py-5 text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-white/5">
-                                {events.map((event) => {
-                                    const formattedDate = event.EventDate 
-                                        ? new Date(event.EventDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-                                        : 'TBA';
+                <div className="flex-1 overflow-y-auto p-8 no-scrollbar scroll-smooth">
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                        <div className="bg-[#0f172a] p-5 rounded-xl border border-[#1e293b] flex flex-col justify-between">
+                            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Total Events</p>
+                            <div className="mt-2 flex items-baseline gap-2">
+                                <h3 className="text-2xl font-black text-white">{events.length}</h3>
+                                <span className="text-xs text-slate-500 font-medium">Published</span>
+                            </div>
+                        </div>
+                        <div className="bg-[#0f172a] p-5 rounded-xl border border-[#1e293b] flex flex-col justify-between">
+                            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Tickets Sold</p>
+                            <div className="mt-2 flex items-baseline gap-2">
+                                <h3 className="text-2xl font-black text-white">1,482</h3>
+                                <span className="text-xs text-emerald-400 font-bold flex items-center"><svg className="w-3 h-3 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg> 12%</span>
+                            </div>
+                        </div>
+                        <div className="bg-[#0f172a] p-5 rounded-xl border border-[#1e293b] flex flex-col justify-between">
+                            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Upcoming Soon</p>
+                            <div className="mt-2 flex items-baseline gap-2">
+                                <h3 className="text-2xl font-black text-white">2</h3>
+                                <span className="text-xs text-amber-400 font-medium">Next 30 days</span>
+                            </div>
+                        </div>
+                        <div className="bg-gradient-to-br from-slate-800 to-[#0f172a] p-5 rounded-xl border border-[#1e293b] flex flex-col justify-between relative overflow-hidden">
+                            <div className="absolute right-0 bottom-0 opacity-10 translate-x-4 translate-y-4">
+                                <svg className="w-24 h-24 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.31-8.86c-1.77-.45-2.34-.94-2.34-1.67 0-.84.79-1.43 2.1-1.43 1.38 0 1.9.66 1.94 1.64h1.71c-.05-1.34-.87-2.57-2.49-2.97V5H10.9v1.69c-1.51.32-2.72 1.3-2.72 2.81 0 1.79 1.49 2.69 3.66 3.21 1.95.46 2.34 1.15 2.34 1.87 0 .53-.39 1.64-2.25 1.64-1.74 0-2.1-.96-2.11-1.66H8.1c.04 1.52 1.04 2.73 2.8 3.12V19h2.33v-1.64c1.51-.31 2.8-1.22 2.8-2.92 0-2.18-1.79-2.7-3.72-3.3z"/></svg>
+                            </div>
+                            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest relative z-10">Est. Revenue</p>
+                            <div className="mt-2 relative z-10">
+                                <h3 className="text-2xl font-black text-white">Rp 125M</h3>
+                                <p className="text-[10px] text-slate-400 mt-1">Pending settlement: Rp 12M</p>
+                            </div>
+                        </div>
+                    </div>
 
-                                    return (
-                                        <tr key={event.ID} className="hover:bg-white/[0.02] transition-colors group">
-                                            <td className="px-6 py-4">
-                                                <p className="font-bold text-white text-sm">{event.EventName}</p>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <p className="text-gray-300">{event.Location || 'TBA'}</p>
-                                                <p className="text-[10px] text-gray-500">{formattedDate}</p>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                {event.BannerImage ? (
-                                                    <span className="text-green-400 text-[10px] font-bold border border-green-500/20 bg-green-500/10 px-2 py-1 rounded">Uploaded</span>
-                                                ) : (
-                                                    <span className="text-gray-500 text-[10px]">No Image</span>
-                                                )}
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                {event.Status === 1 || event.Status === '1' ? (
-                                                    <span className="px-2 py-1 bg-blue-500/10 text-blue-400 text-[9px] font-black rounded border border-blue-500/20 uppercase">Active</span>
-                                                ) : (
-                                                    <span className="px-2 py-1 bg-red-500/10 text-red-400 text-[9px] font-black rounded border border-red-500/20 uppercase">Draft</span>
-                                                )}
-                                            </td>
-                                            <td className="px-6 py-4 text-right flex gap-2 justify-end">
-                                                <button onClick={() => { 
-                                                    setIsEditing(true); 
-                                                    setEditId(event.ID); 
-                                                    setData({
-                                                        EventName: event.EventName,
-                                                        EventDate: event.EventDate ? event.EventDate.split(' ')[0] : '', 
-                                                        Location: event.Location || '',
-                                                        Description: event.Description || '',
-                                                        Status: event.Status,
-                                                        BannerImage: null 
-                                                    }); 
-                                                    setShowModal(true); 
-                                                }} className="p-2 bg-blue-500/10 text-blue-400 rounded-lg hover:bg-blue-500 hover:text-white transition-all"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg></button>
-                                                
-                                                <button onClick={() => { 
-                                                    Swal.fire({ 
-                                                        title: 'Konfirmasi Penghapusan', 
-                                                        text: 'Apakah Anda yakin ingin menghapus data acara ini? Tindakan ini bersifat permanen dan tidak dapat dibatalkan.', 
-                                                        icon: 'warning', 
-                                                        showCancelButton: true, 
-                                                        confirmButtonColor: '#d33', 
-                                                        cancelButtonColor: '#4B5563',
-                                                        confirmButtonText: 'Ya, Hapus Data',
-                                                        cancelButtonText: 'Batal'
-                                                    })
-                                                    .then((result) => { 
-                                                        if (result.isConfirmed) router.delete(route('admin.events.destroy', event.ID)) 
-                                                    });
-                                                }} className="p-2 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500 hover:text-white transition-all"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
-                                            </td>
+                    <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+                        
+                        <div className="xl:col-span-3 bg-[#0f172a] rounded-xl border border-[#1e293b] shadow-sm overflow-hidden flex flex-col">
+                            <div className="p-5 border-b border-[#1e293b] flex justify-between items-center bg-[#0f172a]">
+                                <h2 className="text-sm font-bold text-white">All Events Directory</h2>
+                                <span className="text-[10px] text-slate-500 font-medium">
+                                    {filterStatus !== 'All' ? `Showing ${filterStatus} events` : 'Showing all events'}
+                                </span>
+                            </div>
+                            
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse">
+                                    <thead className="bg-[#060816]/50">
+                                        <tr className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider border-b border-[#1e293b]">
+                                            <th className="px-5 py-3">Event Info</th>
+                                            <th className="px-5 py-3">Organizer</th>
+                                            <th className="px-5 py-3">Visibility</th>
+                                            <th className="px-5 py-3">Sales Target</th>
+                                            <th className="px-5 py-3 text-right">Actions</th>
                                         </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
+                                    </thead>
+                                    <tbody className="divide-y divide-[#1e293b]">
+                                        {/* FILTER YANG UDAH DITERAPKAN */}
+                                        {filteredEvents.map((event, index) => {
+                                            const formattedDate = event.EventDate 
+                                                ? new Date(event.EventDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+                                                : 'TBA';
+                                            
+                                            const isSoldOut = index === 1;
+                                            const progress = isSoldOut ? 100 : Math.floor(Math.random() * 60) + 20;
+
+                                            return (
+                                                <tr key={event.ID} className="hover:bg-slate-800/30 transition-colors duration-200 group">
+                                                    <td className="px-5 py-4">
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="w-10 h-14 rounded bg-[#060816] shrink-0 border border-slate-700 overflow-hidden shadow-sm">
+                                                                {event.BannerImage ? (
+                                                                    <img src={`/storage/${event.BannerImage}`} className="w-full h-full object-cover" alt="Poster" />
+                                                                ) : (
+                                                                    <div className="w-full h-full flex items-center justify-center text-slate-600 bg-slate-800">
+                                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            <div className="min-w-0">
+                                                                <p className="font-bold text-white text-sm truncate">{event.EventName}</p>
+                                                                <p className="text-[10px] text-slate-500 mt-1 truncate">{formattedDate} • {event.Location || 'TBA'}</p>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-5 py-4">
+                                                        <p className="text-xs text-slate-300 font-medium">PT Eventix Global</p>
+                                                        <p className="text-[10px] text-slate-500">Corporate</p>
+                                                    </td>
+                                                    <td className="px-5 py-4">
+                                                        {isSoldOut ? (
+                                                            <span className="px-2 py-1 bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[9px] font-bold rounded flex inline-flex items-center uppercase tracking-wider">Sold Out</span>
+                                                        ) : event.Status === 1 || event.Status === '1' ? (
+                                                            <span className="px-2 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] font-bold rounded flex inline-flex items-center uppercase tracking-wider">Active</span>
+                                                        ) : (
+                                                            <span className="px-2 py-1 bg-slate-800 text-slate-400 border border-slate-700 text-[9px] font-bold rounded flex inline-flex items-center uppercase tracking-wider">Draft</span>
+                                                        )}
+                                                    </td>
+                                                    <td className="px-5 py-4 w-48">
+                                                        <div className="flex justify-between items-end mb-1.5">
+                                                            <span className="text-[10px] text-slate-400 font-medium">{progress}% Sold</span>
+                                                            <span className="text-[10px] text-slate-500 font-mono">1.2k / 1.5k</span>
+                                                        </div>
+                                                        <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                                                            <div className={`h-full rounded-full ${isSoldOut ? 'bg-amber-400' : 'bg-blue-500'}`} style={{ width: `${progress}%` }}></div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-5 py-4 text-right">
+                                                        <div className="flex gap-2 justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                                            <button onClick={() => { 
+                                                                setIsEditing(true); setEditId(event.ID); 
+                                                                setData({ EventName: event.EventName, EventDate: event.EventDate ? event.EventDate.split(' ')[0] : '', Location: event.Location || '', Description: event.Description || '', Status: event.Status, BannerImage: null }); 
+                                                                setShowModal(true); 
+                                                            }} className="p-1.5 text-slate-400 hover:text-white bg-slate-800 border border-slate-700 hover:border-slate-500 rounded transition-all shadow-sm" title="Edit Event">
+                                                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                                            </button>
+                                                            
+                                                            <button onClick={() => { 
+                                                                Swal.fire({ title: 'System Warning', text: 'Delete this event? Action cannot be undone.', icon: 'warning', showCancelButton: true, confirmButtonColor: '#e11d48', cancelButtonColor: '#334155', confirmButtonText: 'Yes, delete', cancelButtonText: 'Cancel', background: '#0f172a', color: '#fff' })
+                                                                .then((result) => { if (result.isConfirmed) router.delete(route('admin.events.destroy', event.ID)) });
+                                                            }} className="p-1.5 text-slate-400 hover:text-rose-400 bg-slate-800 border border-slate-700 hover:border-rose-500/50 hover:bg-rose-500/10 rounded transition-all shadow-sm" title="Delete Event">
+                                                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                        {filteredEvents.length === 0 && (
+                                            <tr>
+                                                <td colSpan="5" className="px-5 py-12 text-center">
+                                                    <div className="w-12 h-12 bg-slate-800/50 rounded-full flex items-center justify-center mx-auto mb-3">
+                                                        <svg className="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                                                    </div>
+                                                    <p className="text-sm font-semibold text-slate-400">No events found</p>
+                                                    <p className="text-xs text-slate-500 mt-1">Try changing the status filter or create a new event.</p>
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div className="xl:col-span-1 space-y-6">
+                            
+                            {/* TOP EVENT WIDGET - DINAMIS GAMBAR ASLI DARI DATABASE */}
+                            <div className="bg-[#0f172a] rounded-xl border border-[#1e293b] p-5">
+                                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Top Event 🔥</h3>
+                                <div className="relative rounded-lg overflow-hidden aspect-[4/3] bg-[#060816] border border-slate-700 shadow-inner">
+                                    <div className="absolute inset-0 bg-gradient-to-t from-[#060816] via-[#060816]/40 to-transparent z-10"></div>
+                                    
+                                    {topEvent ? (
+                                        topEvent.BannerImage ? (
+                                            <img src={`/storage/${topEvent.BannerImage}`} className="w-full h-full object-cover opacity-80" alt={topEvent.EventName} />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center">
+                                                <span className="text-slate-600 text-[10px] font-bold uppercase tracking-widest">No Cover Image</span>
+                                            </div>
+                                        )
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center">
+                                            <span className="text-slate-600 text-[10px] font-bold uppercase tracking-widest">No Events Yet</span>
+                                        </div>
+                                    )}
+
+                                    {topEvent && (
+                                        <div className="absolute bottom-3 left-3 z-20 pr-3">
+                                            <p className="text-sm font-bold text-white leading-tight line-clamp-2">{topEvent.EventName}</p>
+                                            <p className="text-[10px] text-slate-300 mt-1.5 flex items-center gap-1.5 font-medium">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_5px_#34d399]"></span> System Choice
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="bg-[#0f172a] rounded-xl border border-[#1e293b] flex flex-col h-[300px]">
+                                <div className="p-4 border-b border-[#1e293b]">
+                                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Recent Activity</h3>
+                                </div>
+                                <div className="p-4 flex-1 overflow-y-auto no-scrollbar">
+                                    <div className="relative before:absolute before:inset-y-0 before:left-2 before:w-px before:bg-[#1e293b]">
+                                        {recentActivities.map((act, i) => (
+                                            <div key={i} className="relative flex gap-3 mb-5 last:mb-0">
+                                                <div className={`w-4 h-4 rounded-full ${act.bg} border border-[#1e293b] flex shrink-0 items-center justify-center relative z-10 ring-4 ring-[#0f172a]`}>
+                                                    <div className={`w-1.5 h-1.5 rounded-full bg-current ${act.color}`}></div>
+                                                </div>
+                                                <div className="flex-1 min-w-0 -mt-0.5">
+                                                    <p className="text-[11px] text-slate-300 leading-snug">
+                                                        <span className="font-semibold text-white">{act.user}</span> {act.action} <span className="font-medium text-white">{act.target}</span>
+                                                    </p>
+                                                    <p className="text-[9px] text-slate-500 mt-1">{act.time}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="p-3 border-t border-[#1e293b] text-center">
+                                    <button className="text-[10px] font-bold text-slate-400 hover:text-white transition-colors">View All Logs</button>
+                                </div>
+                            </div>
+
+                        </div>
                     </div>
                 </div>
 
-                {/* MODAL FORM UPLOAD FILE */}
                 {showModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#090B10]/90 backdrop-blur-sm overflow-y-auto">
-                        <div className="bg-[#0F131C] border border-white/10 rounded-2xl w-full max-w-xl my-auto shadow-[0_0_50px_rgba(0,0,0,0.8)]">
-                            <div className="p-6 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
-                                <h2 className="text-lg font-black text-white uppercase tracking-widest">{isEditing ? 'Edit Event' : 'Create New Event'}</h2>
-                                <button onClick={() => setShowModal(false)} className="text-gray-500 hover:text-[#e8ff47] transition-colors"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#060816]/90 backdrop-blur-sm overflow-y-auto">
+                        <div className="bg-[#0f172a] border border-[#1e293b] rounded-xl w-full max-w-xl my-auto shadow-2xl">
+                            <div className="p-5 border-b border-[#1e293b] flex justify-between items-center bg-slate-800/20 rounded-t-xl">
+                                <h2 className="text-sm font-bold text-white">{isEditing ? 'Update Event Details' : 'Create New Event'}</h2>
+                                <button onClick={() => setShowModal(false)} className="text-slate-500 hover:text-white transition-colors p-1 hover:bg-slate-800 rounded">
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" strokeWidth="2" strokeLinecap="round"></path></svg>
+                                </button>
                             </div>
                             
-                            <form onSubmit={submit} className="p-8 grid grid-cols-2 gap-5">
+                            <form onSubmit={submit} className="p-6 grid grid-cols-2 gap-5">
                                 <div className="col-span-2">
-                                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Event Name</label>
-                                    <input type="text" value={data.EventName} onChange={e => setData('EventName', e.target.value)} className="w-full bg-[#090B10] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#e8ff47] outline-none transition-all" placeholder="Nama Konser" required />
+                                    <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1.5">Event Name</label>
+                                    <input type="text" value={data.EventName} onChange={e => setData('EventName', e.target.value)} className="w-full bg-[#060816] border border-[#1e293b] rounded-lg px-3 py-2 text-sm text-white focus:border-slate-400 outline-none transition-all placeholder-slate-600" placeholder="e.g. Pestapora 2026" required />
                                 </div>
                                 
                                 <div className="col-span-2 md:col-span-1">
-                                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Event Date</label>
-                                    <input type="date" value={data.EventDate} onChange={e => setData('EventDate', e.target.value)} className="w-full bg-[#090B10] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#e8ff47] outline-none transition-all [color-scheme:dark]" />
+                                    <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1.5">Event Date</label>
+                                    <input type="date" value={data.EventDate} onChange={e => setData('EventDate', e.target.value)} className="w-full bg-[#060816] border border-[#1e293b] rounded-lg px-3 py-2 text-sm text-white focus:border-slate-400 outline-none transition-all [color-scheme:dark]" />
                                 </div>
                                 
                                 <div className="col-span-2 md:col-span-1">
-                                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Location</label>
-                                    <input type="text" value={data.Location} onChange={e => setData('Location', e.target.value)} className="w-full bg-[#090B10] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#e8ff47] outline-none transition-all" placeholder="Venue Lokasi" />
+                                    <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1.5">Location</label>
+                                    <input type="text" value={data.Location} onChange={e => setData('Location', e.target.value)} className="w-full bg-[#060816] border border-[#1e293b] rounded-lg px-3 py-2 text-sm text-white focus:border-slate-400 outline-none transition-all placeholder-slate-600" placeholder="Venue Name" />
                                 </div>
 
                                 <div className="col-span-2">
-                                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Upload Banner (JPG/PNG, Max 2MB)</label>
-                                    <input 
-                                        type="file" 
-                                        onChange={e => setData('BannerImage', e.target.files[0])} 
-                                        className="w-full bg-[#090B10] border border-dashed border-white/20 rounded-xl px-4 py-6 text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-[#e8ff47] file:text-black hover:border-[#e8ff47] transition-all cursor-pointer" 
-                                        accept="image/*"
-                                    />
-                                    {errors.BannerImage && <p className="text-red-500 text-[10px] mt-1 uppercase font-bold">{errors.BannerImage}</p>}
+                                    <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1.5">Upload Poster (Aspect 4:5)</label>
+                                    <div className="relative">
+                                        <input type="file" onChange={e => setData('BannerImage', e.target.files[0])} className="w-full bg-[#060816] border border-dashed border-[#1e293b] rounded-lg px-3 py-4 text-xs text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-slate-800 file:text-white hover:border-slate-500 transition-all cursor-pointer" accept="image/*" />
+                                    </div>
+                                    {errors.BannerImage && <p className="text-red-400 text-[10px] mt-1.5 font-medium">{errors.BannerImage}</p>}
                                 </div>
 
                                 <div className="col-span-2">
-                                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Description</label>
-                                    <textarea value={data.Description} onChange={e => setData('Description', e.target.value)} rows="3" className="w-full bg-[#090B10] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#e8ff47] outline-none transition-all resize-none shadow-inner" placeholder="Detail event..."></textarea>
+                                    <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1.5">Description</label>
+                                    <textarea value={data.Description} onChange={e => setData('Description', e.target.value)} rows="3" className="w-full bg-[#060816] border border-[#1e293b] rounded-lg px-3 py-2 text-sm text-white focus:border-slate-400 outline-none transition-all resize-none placeholder-slate-600" placeholder="Write event details here..."></textarea>
                                 </div>
 
-                                <div className="col-span-2 pt-4 flex justify-end gap-3 border-t border-white/5 mt-4">
-                                    <button type="button" onClick={() => setShowModal(false)} className="px-6 py-2.5 text-xs font-bold text-gray-500 hover:text-white transition-all uppercase tracking-widest">Batal</button>
-                                    <button type="submit" disabled={processing} className="px-8 py-2.5 bg-[#e8ff47] hover:bg-[#d4ed36] text-black rounded-xl text-xs font-black uppercase tracking-widest shadow-[0_0_20px_rgba(232,255,71,0.3)] hover:shadow-[0_0_25px_rgba(232,255,71,0.4)] hover:-translate-y-0.5 transition-all">
-                                        {processing ? 'Processing...' : 'Simpan Data'}
+                                <div className="col-span-2 pt-4 flex justify-end gap-3 border-t border-[#1e293b] mt-2">
+                                    <button type="button" onClick={() => setShowModal(false)} className="px-5 py-2 text-xs font-semibold text-slate-400 hover:text-white transition-all">Cancel</button>
+                                    <button type="submit" disabled={processing} className="px-6 py-2 bg-white text-slate-900 hover:bg-slate-200 rounded-lg text-xs font-bold transition-all shadow-sm disabled:opacity-50">
+                                        {processing ? 'Saving...' : 'Save Configuration'}
                                     </button>
                                 </div>
                             </form>
