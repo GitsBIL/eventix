@@ -5,6 +5,7 @@ use App\Http\Controllers\GoogleController;
 use App\Http\Controllers\TwoFactorController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AnalyticsController; // <-- TAMBAHAN BARU BUAT ANALYTICS
 use App\Http\Controllers\Admin\EventController;
 use App\Http\Controllers\Admin\TicketController;
 use App\Http\Controllers\Admin\TransactionController;
@@ -85,6 +86,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::middleware(['auth', 'verified', '2fa_check'])->group(function () {
     
     Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
+    
+    // 👇 TAMBAHIN BARIS INI BUAT HALAMAN ANALYTICS 👇
+    Route::get('/admin/analytics', [AnalyticsController::class, 'index'])->name('admin.analytics');
 
     Route::resource('admin/events', EventController::class)->names('admin.events');
     Route::resource('admin/tickets', TicketController::class)->names('admin.tickets');

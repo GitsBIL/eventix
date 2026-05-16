@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
-import { Head, Link, usePage, useForm, router } from '@inertiajs/react';
+import { Head, usePage, useForm, router } from '@inertiajs/react';
 import Swal from 'sweetalert2';
+import AdminSidebar from '@/Components/AdminSidebar';
 
 export default function EventIndex({ events = [] }) {
     const { auth } = usePage().props;
     const [showModal, setShowModal] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [editId, setEditId] = useState(null);
-    
-    // STATE BARU BUAT FILTER DROPDOWN
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [filterStatus, setFilterStatus] = useState('All');
+    const [searchTerm, setSearchTerm] = useState('');
 
     const { data, setData, post, processing, reset, errors } = useForm({
         EventName: '',
@@ -51,91 +51,24 @@ export default function EventIndex({ events = [] }) {
         { user: 'Nabil P.', action: 'changed status', target: 'Synchronize Fest', time: '5h ago', color: 'text-slate-400', bg: 'bg-slate-500/10' },
     ];
 
-    // LOGIKA FILTER TABLE
     const filteredEvents = events.filter(event => {
         if (filterStatus === 'Active') return event.Status === 1 || event.Status === '1';
         if (filterStatus === 'Draft') return event.Status === 0 || event.Status === '0';
         return true;
     });
 
-    // AMBIL DATA EVENT ASLI BUAT DIPAJANG DI WIDGET "TOP EVENT" (Cari yang ada gambarnya)
     const topEvent = events.find(e => e.BannerImage) || events[0];
 
     return (
         <div className="flex h-screen bg-[#060816] text-slate-300 font-sans overflow-hidden selection:bg-[#e8ff47] selection:text-black">
             <Head title="Events Management - Eventix" />
 
-            <aside className="w-64 bg-[#0f172a] border-r border-[#1e293b] flex flex-col justify-between h-full hidden md:flex shrink-0 shadow-2xl z-20">
-                <div className="overflow-y-auto overflow-x-hidden no-scrollbar">
-                    <div className="h-16 flex items-center px-6 border-b border-[#1e293b] sticky top-0 bg-[#0f172a]/90 backdrop-blur-md z-10">
-                        <span className="text-lg font-black text-white uppercase tracking-tighter">EVEN<span className="text-[#e8ff47]">TIX</span></span>
-                    </div>
-                    
-                    <div className="px-4 py-6 space-y-6">
-                        <div>
-                            <p className="px-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Overview</p>
-                            <ul className="space-y-0.5">
-                                <li>
-                                    <Link href={route('admin.dashboard')} className="flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg transition-all">
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-                                        <span className="text-sm font-medium">Dashboard</span>
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link href="#" className="flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg transition-all">
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                                        <span className="text-sm font-medium">Analytics</span>
-                                    </Link>
-                                </li>
-                            </ul>
-                        </div>
+            {/* PANGGIL KOMPONEN SIDEBAR DI SINI */}
+            <AdminSidebar />
 
-                        <div>
-                            <p className="px-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Event Management</p>
-                            <ul className="space-y-0.5">
-                                <li>
-                                    <Link href={route('admin.events.index')} className="flex items-center gap-3 px-3 py-2 bg-slate-800/80 text-white rounded-lg border border-slate-700/50 transition-all shadow-sm">
-                                        <svg className="w-4 h-4 text-[#e8ff47]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                        <span className="text-sm font-semibold">Events</span>
-                                    </Link>
-                                </li>
-                                <li><Link href={route('admin.tickets.index')} className="flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg transition-all"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path></svg><span className="text-sm font-medium">Tickets</span></Link></li>
-                                <li><Link href="#" className="flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg transition-all"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg><span className="text-sm font-medium">Transactions</span></Link></li>
-                            </ul>
-                        </div>
-
-                        <div>
-                            <p className="px-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">System</p>
-                            <ul className="space-y-0.5">
-                                <li><Link href="#" className="flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg transition-all"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg><span className="text-sm font-medium">Customers</span></Link></li>
-                                <li><Link href="#" className="flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg transition-all"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg><span className="text-sm font-medium">Settings</span></Link></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="p-4 border-t border-[#1e293b] bg-[#0f172a]">
-                    <div className="flex items-center gap-3">
-                        <div className="relative">
-                            <div className="w-9 h-9 rounded-md bg-slate-800 flex items-center justify-center text-slate-300 font-bold border border-slate-700 text-xs">
-                                {auth.user.FullName.charAt(0)}
-                            </div>
-                            <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 border-2 border-[#0f172a] rounded-full"></div>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-sm font-bold text-white truncate leading-tight">{auth.user.FullName}</p>
-                            <p className="text-[10px] text-slate-500 truncate mt-0.5">System Admin</p>
-                        </div>
-                        <Link href={route('logout')} method="post" as="button" className="text-slate-500 hover:text-red-400 transition-colors p-1.5 hover:bg-red-500/10 rounded-md">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                        </Link>
-                    </div>
-                </div>
-            </aside>
-
+            {/* MAIN CONTENT AREA */}
             <main className="flex-1 flex flex-col h-full overflow-hidden relative">
                 
-                {/* ENTERPRISE TOP HEADER DENGAN FILTER HIDUP */}
                 <header className="h-16 flex items-center justify-between px-8 border-b border-[#1e293b] bg-[#0f172a] z-20 shrink-0">
                     <div className="flex items-center gap-4">
                         <h1 className="text-base font-bold text-white">Events</h1>
@@ -148,13 +81,12 @@ export default function EventIndex({ events = [] }) {
                     <div className="flex items-center gap-3">
                         <div className="relative hidden md:block">
                             <svg className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                            <input type="text" placeholder="Search events..." className="bg-[#060816] border border-[#1e293b] rounded-md pl-9 pr-12 py-1.5 text-xs text-white focus:outline-none focus:border-slate-500 transition-colors w-64 placeholder-slate-600" />
+                            <input type="text" placeholder="Search events..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="bg-[#060816] border border-[#1e293b] rounded-md pl-9 pr-12 py-1.5 text-xs text-white focus:outline-none focus:border-slate-500 transition-colors w-64 placeholder-slate-600" />
                             <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
                                 <span className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-[9px] text-slate-400 font-mono">⌘K</span>
                             </div>
                         </div>
 
-                        {/* INTERACTIVE DROPDOWN FILTER */}
                         <div className="relative">
                             <button 
                                 onClick={() => setIsFilterOpen(!isFilterOpen)} 
@@ -164,7 +96,6 @@ export default function EventIndex({ events = [] }) {
                                 <svg className={`w-3 h-3 text-slate-500 transition-transform ${isFilterOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                             </button>
                             
-                            {/* ISI DROPDOWNNYA */}
                             {isFilterOpen && (
                                 <div className="absolute right-0 mt-1 w-36 bg-[#0f172a] border border-[#1e293b] rounded-lg shadow-xl z-50 overflow-hidden">
                                     <button onClick={() => {setFilterStatus('All'); setIsFilterOpen(false)}} className={`w-full text-left px-4 py-2 text-xs hover:bg-slate-800 transition-colors ${filterStatus === 'All' ? 'text-white font-bold bg-slate-800/50' : 'text-slate-400'}`}>All Events</button>
@@ -176,11 +107,6 @@ export default function EventIndex({ events = [] }) {
 
                         <div className="w-px h-6 bg-[#1e293b] mx-1"></div>
 
-                        <button className="relative p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-md transition-all">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
-                            <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-rose-500 rounded-full border border-[#0f172a]"></span>
-                        </button>
-
                         <button onClick={() => { setIsEditing(false); reset(); setShowModal(true); }} className="ml-2 px-4 py-1.5 bg-white text-slate-900 hover:bg-slate-200 rounded-md text-xs font-bold transition-all flex items-center gap-2 shadow-sm">
                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
                             New Event
@@ -189,7 +115,6 @@ export default function EventIndex({ events = [] }) {
                 </header>
 
                 <div className="flex-1 overflow-y-auto p-8 no-scrollbar scroll-smooth">
-                    
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
                         <div className="bg-[#0f172a] p-5 rounded-xl border border-[#1e293b] flex flex-col justify-between">
                             <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Total Events</p>
@@ -246,12 +171,8 @@ export default function EventIndex({ events = [] }) {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-[#1e293b]">
-                                        {/* FILTER YANG UDAH DITERAPKAN */}
                                         {filteredEvents.map((event, index) => {
-                                            const formattedDate = event.EventDate 
-                                                ? new Date(event.EventDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-                                                : 'TBA';
-                                            
+                                            const formattedDate = event.EventDate ? new Date(event.EventDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'TBA';
                                             const isSoldOut = index === 1;
                                             const progress = isSoldOut ? 100 : Math.floor(Math.random() * 60) + 20;
 
@@ -298,18 +219,10 @@ export default function EventIndex({ events = [] }) {
                                                     </td>
                                                     <td className="px-5 py-4 text-right">
                                                         <div className="flex gap-2 justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                                            <button onClick={() => { 
-                                                                setIsEditing(true); setEditId(event.ID); 
-                                                                setData({ EventName: event.EventName, EventDate: event.EventDate ? event.EventDate.split(' ')[0] : '', Location: event.Location || '', Description: event.Description || '', Status: event.Status, BannerImage: null }); 
-                                                                setShowModal(true); 
-                                                            }} className="p-1.5 text-slate-400 hover:text-white bg-slate-800 border border-slate-700 hover:border-slate-500 rounded transition-all shadow-sm" title="Edit Event">
+                                                            <button onClick={() => { setIsEditing(true); setEditId(event.ID); setData({ EventName: event.EventName, EventDate: event.EventDate ? event.EventDate.split(' ')[0] : '', Location: event.Location || '', Description: event.Description || '', Status: event.Status, BannerImage: null }); setShowModal(true); }} className="p-1.5 text-slate-400 hover:text-white bg-slate-800 border border-slate-700 hover:border-slate-500 rounded transition-all shadow-sm" title="Edit Event">
                                                                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                                             </button>
-                                                            
-                                                            <button onClick={() => { 
-                                                                Swal.fire({ title: 'System Warning', text: 'Delete this event? Action cannot be undone.', icon: 'warning', showCancelButton: true, confirmButtonColor: '#e11d48', cancelButtonColor: '#334155', confirmButtonText: 'Yes, delete', cancelButtonText: 'Cancel', background: '#0f172a', color: '#fff' })
-                                                                .then((result) => { if (result.isConfirmed) router.delete(route('admin.events.destroy', event.ID)) });
-                                                            }} className="p-1.5 text-slate-400 hover:text-rose-400 bg-slate-800 border border-slate-700 hover:border-rose-500/50 hover:bg-rose-500/10 rounded transition-all shadow-sm" title="Delete Event">
+                                                            <button onClick={() => { Swal.fire({ title: 'System Warning', text: 'Delete this event? Action cannot be undone.', icon: 'warning', showCancelButton: true, confirmButtonColor: '#e11d48', cancelButtonColor: '#334155', confirmButtonText: 'Yes, delete', cancelButtonText: 'Cancel', background: '#0f172a', color: '#fff' }).then((result) => { if (result.isConfirmed) router.delete(route('admin.events.destroy', event.ID)) }); }} className="p-1.5 text-slate-400 hover:text-rose-400 bg-slate-800 border border-slate-700 hover:border-rose-500/50 hover:bg-rose-500/10 rounded transition-all shadow-sm" title="Delete Event">
                                                                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                                             </button>
                                                         </div>
@@ -334,25 +247,18 @@ export default function EventIndex({ events = [] }) {
                         </div>
 
                         <div className="xl:col-span-1 space-y-6">
-                            
-                            {/* TOP EVENT WIDGET - DINAMIS GAMBAR ASLI DARI DATABASE */}
                             <div className="bg-[#0f172a] rounded-xl border border-[#1e293b] p-5">
                                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Top Event 🔥</h3>
                                 <div className="relative rounded-lg overflow-hidden aspect-[4/3] bg-[#060816] border border-slate-700 shadow-inner">
                                     <div className="absolute inset-0 bg-gradient-to-t from-[#060816] via-[#060816]/40 to-transparent z-10"></div>
-                                    
                                     {topEvent ? (
                                         topEvent.BannerImage ? (
                                             <img src={`/storage/${topEvent.BannerImage}`} className="w-full h-full object-cover opacity-80" alt={topEvent.EventName} />
                                         ) : (
-                                            <div className="w-full h-full flex items-center justify-center">
-                                                <span className="text-slate-600 text-[10px] font-bold uppercase tracking-widest">No Cover Image</span>
-                                            </div>
+                                            <div className="w-full h-full flex items-center justify-center"><span className="text-slate-600 text-[10px] font-bold uppercase tracking-widest">No Cover Image</span></div>
                                         )
                                     ) : (
-                                        <div className="w-full h-full flex items-center justify-center">
-                                            <span className="text-slate-600 text-[10px] font-bold uppercase tracking-widest">No Events Yet</span>
-                                        </div>
+                                        <div className="w-full h-full flex items-center justify-center"><span className="text-slate-600 text-[10px] font-bold uppercase tracking-widest">No Events Yet</span></div>
                                     )}
 
                                     {topEvent && (
@@ -378,9 +284,7 @@ export default function EventIndex({ events = [] }) {
                                                     <div className={`w-1.5 h-1.5 rounded-full bg-current ${act.color}`}></div>
                                                 </div>
                                                 <div className="flex-1 min-w-0 -mt-0.5">
-                                                    <p className="text-[11px] text-slate-300 leading-snug">
-                                                        <span className="font-semibold text-white">{act.user}</span> {act.action} <span className="font-medium text-white">{act.target}</span>
-                                                    </p>
+                                                    <p className="text-[11px] text-slate-300 leading-snug"><span className="font-semibold text-white">{act.user}</span> {act.action} <span className="font-medium text-white">{act.target}</span></p>
                                                     <p className="text-[9px] text-slate-500 mt-1">{act.time}</p>
                                                 </div>
                                             </div>
@@ -391,7 +295,6 @@ export default function EventIndex({ events = [] }) {
                                     <button className="text-[10px] font-bold text-slate-400 hover:text-white transition-colors">View All Logs</button>
                                 </div>
                             </div>
-
                         </div>
                     </div>
                 </div>
@@ -401,9 +304,7 @@ export default function EventIndex({ events = [] }) {
                         <div className="bg-[#0f172a] border border-[#1e293b] rounded-xl w-full max-w-xl my-auto shadow-2xl">
                             <div className="p-5 border-b border-[#1e293b] flex justify-between items-center bg-slate-800/20 rounded-t-xl">
                                 <h2 className="text-sm font-bold text-white">{isEditing ? 'Update Event Details' : 'Create New Event'}</h2>
-                                <button onClick={() => setShowModal(false)} className="text-slate-500 hover:text-white transition-colors p-1 hover:bg-slate-800 rounded">
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" strokeWidth="2" strokeLinecap="round"></path></svg>
-                                </button>
+                                <button onClick={() => setShowModal(false)} className="text-slate-500 hover:text-white transition-colors p-1 hover:bg-slate-800 rounded"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" strokeWidth="2" strokeLinecap="round"></path></svg></button>
                             </div>
                             
                             <form onSubmit={submit} className="p-6 grid grid-cols-2 gap-5">

@@ -1,16 +1,14 @@
 import React, { useState } from 'react';
 import { Head, Link, usePage, useForm, router } from '@inertiajs/react';
 import Swal from 'sweetalert2';
+import AdminSidebar from '@/Components/AdminSidebar';
 
 export default function TicketIndex({ tickets = [], events = [], stats }) {
-    const { auth } = usePage().props;
     const [showModal, setShowModal] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [editId, setEditId] = useState(null);
     const [isFixedEvent, setIsFixedEvent] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
-    
-    // STATE BARU BUAT FILTER DROPDOWN
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [filterStatus, setFilterStatus] = useState('All');
 
@@ -63,51 +61,8 @@ export default function TicketIndex({ tickets = [], events = [], stats }) {
         <div className="flex h-screen bg-[#060816] text-slate-300 font-sans overflow-hidden selection:bg-[#e8ff47] selection:text-black">
             <Head title="Tickets Management - Eventix" />
 
-            <aside className="w-64 bg-[#0f172a] border-r border-[#1e293b] flex flex-col justify-between h-full hidden md:flex shrink-0 shadow-2xl z-20">
-                <div className="overflow-y-auto overflow-x-hidden no-scrollbar">
-                    <div className="h-16 flex items-center px-6 border-b border-[#1e293b] sticky top-0 bg-[#0f172a]/90 backdrop-blur-md z-10">
-                        <span className="text-lg font-black text-white uppercase tracking-tighter">EVEN<span className="text-[#e8ff47]">TIX</span></span>
-                    </div>
-                    
-                    <div className="px-4 py-6 space-y-6">
-                        <div>
-                            <p className="px-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Overview</p>
-                            <ul className="space-y-0.5">
-                                <li><Link href={route('admin.dashboard')} className="flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg transition-all"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg><span className="text-sm font-medium">Dashboard</span></Link></li>
-                                <li><Link href="#" className="flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg transition-all"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg><span className="text-sm font-medium">Analytics</span></Link></li>
-                            </ul>
-                        </div>
-                        <div>
-                            <p className="px-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Event Management</p>
-                            <ul className="space-y-0.5">
-                                <li><Link href={route('admin.events.index')} className="flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg transition-all"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg><span className="text-sm font-medium">Events</span></Link></li>
-                                <li>
-                                    <Link href={route('admin.tickets.index')} className="flex items-center gap-3 px-3 py-2 bg-slate-800/80 text-white rounded-lg border border-slate-700/50 transition-all shadow-sm">
-                                        <svg className="w-4 h-4 text-[#e8ff47]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path></svg>
-                                        <span className="text-sm font-semibold">Tickets</span>
-                                    </Link>
-                                </li>
-                                <li><Link href="#" className="flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg transition-all"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg><span className="text-sm font-medium">Transactions</span></Link></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="p-4 border-t border-[#1e293b] bg-[#0f172a]">
-                    <div className="flex items-center gap-3">
-                        <div className="relative">
-                            <div className="w-9 h-9 rounded-md bg-slate-800 flex items-center justify-center text-slate-300 font-bold border border-slate-700 text-xs">
-                                {auth.user.FullName.charAt(0)}
-                            </div>
-                            <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 border-2 border-[#0f172a] rounded-full"></div>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-sm font-bold text-white truncate leading-tight">{auth.user.FullName}</p>
-                            <p className="text-[10px] text-emerald-400 font-medium truncate mt-0.5">Online • System Admin</p>
-                        </div>
-                    </div>
-                </div>
-            </aside>
+            {/* PANGGIL KOMPONEN SIDEBAR DI SINI */}
+            <AdminSidebar />
 
             <main className="flex-1 flex flex-col h-full overflow-hidden relative">
                 
@@ -123,9 +78,11 @@ export default function TicketIndex({ tickets = [], events = [], stats }) {
                         <div className="relative hidden md:block">
                             <svg className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                             <input type="text" placeholder="Search ticket categories..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="bg-[#060816] border border-[#1e293b] rounded-md pl-9 pr-12 py-1.5 text-xs text-white focus:outline-none focus:border-slate-500 transition-colors w-64 placeholder-slate-600" />
+                            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                                <span className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-[9px] text-slate-400 font-mono">⌘K</span>
+                            </div>
                         </div>
 
-                        {/* INTERACTIVE DROPDOWN FILTER DI SINI */}
                         <div className="relative">
                             <button 
                                 onClick={() => setIsFilterOpen(!isFilterOpen)} 
@@ -184,7 +141,6 @@ export default function TicketIndex({ tickets = [], events = [], stats }) {
                         
                         <div className="xl:col-span-3 space-y-8">
                             {events.length > 0 ? events.map((event) => {
-                                // LOGIKA FILTER DITERAPKAN DI SINI
                                 const eventTickets = tickets.filter(t => {
                                     if (t.EventID !== event.ID) return false;
                                     if (filterStatus === 'Active') return t.Status === 1 || t.Status === '1';

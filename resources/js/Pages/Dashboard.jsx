@@ -1,5 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, usePage } from '@inertiajs/react';
+import AdminSidebar from '@/Components/AdminSidebar';
 
 export default function Dashboard() {
     // Ini kuncinya cuy! Kita tarik data auth dari props global Inertia

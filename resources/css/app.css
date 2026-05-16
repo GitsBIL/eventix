@@ -1,3 +1,38 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* =========================================
+   ENTERPRISE SCROLLBAR STYLING
+========================================= */
+
+/* Lebar scrollbar ditipisin ala macOS */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+/* Background scrollbar dibikin transparan biar nyatu sama background web */
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* Warna gagang scrollbar dibikin slate gelap & membulat */
+::-webkit-scrollbar-thumb {
+    background: #1e293b; 
+    border-radius: 10px;
+}
+
+/* Efek nyala dikit pas scrollbar di-hover */
+::-webkit-scrollbar-thumb:hover {
+    background: #334155; 
+}
+
+/* Utilitas pendukung kalau mau nyembunyiin scrollbar 100% di elemen tertentu */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
