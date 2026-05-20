@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head, usePage, useForm, router } from '@inertiajs/react';
+import { Head, usePage, useForm, router, Link } from '@inertiajs/react'; // FIX: Nambahin import Link
 import Swal from 'sweetalert2';
 import AdminSidebar from '@/Components/AdminSidebar';
 
@@ -63,10 +63,8 @@ export default function EventIndex({ events = [] }) {
         <div className="flex h-screen bg-[#060816] text-slate-300 font-sans overflow-hidden selection:bg-[#e8ff47] selection:text-black">
             <Head title="Events Management - Eventix" />
 
-            {/* PANGGIL KOMPONEN SIDEBAR DI SINI */}
             <AdminSidebar />
 
-            {/* MAIN CONTENT AREA */}
             <main className="flex-1 flex flex-col h-full overflow-hidden relative">
                 
                 <header className="h-16 flex items-center justify-between px-8 border-b border-[#1e293b] bg-[#0f172a] z-20 shrink-0">
@@ -219,6 +217,13 @@ export default function EventIndex({ events = [] }) {
                                                     </td>
                                                     <td className="px-5 py-4 text-right">
                                                         <div className="flex gap-2 justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                                            
+                                                            {/* SIHIR ARSITEKTUR TAHAP 1: TOMBOL MANAGE (MASUK KE DALEM EVENT) */}
+                                                            <Link href={route('admin.events.show', event.ID)} className="px-3 py-1.5 bg-white text-[#060816] hover:bg-slate-200 rounded text-xs font-bold transition-all flex inline-flex items-center gap-1.5 shadow-sm">
+                                                                Manage
+                                                            </Link>
+                                                            {/* ========================================================= */}
+
                                                             <button onClick={() => { setIsEditing(true); setEditId(event.ID); setData({ EventName: event.EventName, EventDate: event.EventDate ? event.EventDate.split(' ')[0] : '', Location: event.Location || '', Description: event.Description || '', Status: event.Status, BannerImage: null }); setShowModal(true); }} className="p-1.5 text-slate-400 hover:text-white bg-slate-800 border border-slate-700 hover:border-slate-500 rounded transition-all shadow-sm" title="Edit Event">
                                                                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                                             </button>

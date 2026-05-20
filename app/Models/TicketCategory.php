@@ -8,6 +8,12 @@ class TicketCategory extends Model
 {
     protected $table = 'ticket_categories';
     protected $primaryKey = 'ID';
-    public $timestamps = false; // Matikan timestamps bawaan Laravel
-    protected $guarded = []; // Izinkan semua kolom diisi
+    public $timestamps = false; 
+
+    protected $fillable = [
+        'EventID', 'CategoryName', 'Description', 'Price', 'Discount', 
+        'Quota', 'MaxPurchase', 'EntryType', 'Benefits', 'CompanyCode', 
+        'Status', 'IsDeleted', 'CreatedBy', 'CreatedDate', 
+        'LastUpdatedBy', 'LastUpdatedDate'
+    ];
 }

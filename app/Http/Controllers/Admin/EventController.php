@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 class EventController extends Controller
 {
@@ -36,6 +37,51 @@ class EventController extends Controller
         ]);
     }
 
+    /**
+     * Memproses kalkulasi data asli dari database untuk metrik Dashboard Acara
+     */
+    private function getEventStats($eventId) {
+        $issuedTickets = DB::table('order_items')
+            ->join('orders', 'order_items.OrderID', '=', 'orders.ID')
+            ->join('ticket_categories', 'order_items.TicketCategoryID', '=', 'ticket_categories.ID')
+            ->where('ticket_categories.EventID', $eventId)
+            ->where('order_items.IsDeleted', 0)
+            ->whereIn('orders.PaymentStatus', ['paid', 'issued'])
+            ->get();
+
+        $pendingTx = DB::table('orders')
+            ->join('order_items', 'orders.ID', '=', 'order_items.OrderID')
+            ->join('ticket_categories', 'order_items.TicketCategoryID', '=', 'ticket_categories.ID')
+            ->where('ticket_categories.EventID', $eventId)
+            ->where('orders.PaymentStatus', 'pending_payment')
+            ->distinct('orders.ID')
+            ->count('orders.ID');
+
+        $totalCapacity = DB::table('ticket_categories')
+            ->where('EventID', $eventId)
+            ->where('IsDeleted', 0)
+            ->sum('Quota');
+
+        return [
+            'revenue' => 'Rp ' . number_format($issuedTickets->sum('SubTotal'), 0, ',', '.'),
+            'tickets_sold' => (int) $issuedTickets->sum('Qty'),
+            'total_capacity' => (int) $totalCapacity,
+            'attendance_rate' => 0, 
+            'pending_tx' => $pendingTx,
+        ];
+    }
+
+    public function show($id)
+    {
+        $event = Event::findOrFail($id);
+        
+        return Inertia::render('Admin/Events/Show', [
+            'event' => $event,
+            'stats' => $this->getEventStats($id),
+            'activeTab' => 'overview'
+        ]);
+    }
+
     public function store(Request $request)
     {
         $request->validate([
@@ -43,7 +89,7 @@ class EventController extends Controller
             'EventDate' => 'nullable|date',
             'Location' => 'nullable|string',
             'Description' => 'nullable|string',
-            'BannerImage' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048', // Validasi File Gambar
+            'BannerImage' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'Status' => 'nullable|integer|in:0,1',
         ]);
 

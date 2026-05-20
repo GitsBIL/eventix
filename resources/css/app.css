@@ -36,3 +36,40 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
 }
+
+/* =========================================
+   ENTERPRISE CUSTOM ANIMATIONS & UI
+========================================= */
+
+/* Shimmer Loading Effect */
+@keyframes shimmer { 
+    0% { opacity: 0.5; } 
+    50% { opacity: 1; } 
+    100% { opacity: 0.5; } 
+}
+.animate-shimmer { 
+    animation: shimmer 1.5s infinite; 
+}
+
+/* Custom Thin Scrollbar untuk Modal & Container */
+.custom-scrollbar::-webkit-scrollbar { 
+    width: 5px; 
+    height: 5px; 
+}
+.custom-scrollbar::-webkit-scrollbar-track { 
+    background: transparent; 
+}
+.custom-scrollbar::-webkit-scrollbar-thumb { 
+    background: rgba(255, 255, 255, 0.05); 
+    border-radius: 10px; 
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { 
+    background: rgba(255, 255, 255, 0.15); 
+}
+
+/* Tooltip Utility */
+.has-tooltip:hover .tooltip { 
+    opacity: 1; 
+    visibility: visible; 
+    transform: translateY(0); 
+}

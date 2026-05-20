@@ -5,7 +5,8 @@ use App\Http\Controllers\GoogleController;
 use App\Http\Controllers\TwoFactorController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\Admin\AdminDashboardController;
-use App\Http\Controllers\Admin\AnalyticsController; // <-- TAMBAHAN BARU BUAT ANALYTICS
+use App\Http\Controllers\Admin\AnalyticsController;
+use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\EventController;
 use App\Http\Controllers\Admin\TicketController;
 use App\Http\Controllers\Admin\TransactionController;
@@ -14,16 +15,13 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
-// Route Halaman Utama (Public) - Menampilkan Data Event Asli + Harga Dinamis
+// Route Halaman Utama (Public)
 Route::get('/', function () {
     $events = \App\Models\Event::where('Status', 1)->orderBy('ID', 'desc')->get()->map(function($event) {
-        
-        // LOGIKA BARU: Cari harga tiket paling murah buat event ini
         $lowestPrice = \App\Models\TicketCategory::where('EventID', $event->ID)
                             ->where('Status', 1)
                             ->min('Price');
         
-        // Kalau tiketnya ada, tampilin "Mulai Rp xxx". Kalau belum ada, tampilin "Tiket Belum Tersedia"
         $priceDisplay = $lowestPrice ? 'Mulai Rp ' . number_format($lowestPrice, 0, ',', '.') : 'Tiket Belum Tersedia';
 
         return [
@@ -32,7 +30,7 @@ Route::get('/', function () {
             'date' => $event->EventDate ? date('d M Y', strtotime($event->EventDate)) : 'TBA',
             'venue' => $event->Location,
             'image' => $event->BannerImage ? '/storage/' . $event->BannerImage : 'https://images.unsplash.com/photo-1533174000220-1110a30b42f1?w=800&q=80',
-            'price' => $priceDisplay, // <-- Sekarang harganya dinamis!
+            'price' => $priceDisplay,
             'tag' => 'Live Event'
         ];
     });
@@ -48,7 +46,6 @@ Route::get('auth/google/callback', [GoogleController::class, 'callback'])->name(
 
 // Area User Terautentikasi (Customer)
 Route::middleware(['auth', 'verified'])->group(function () {
-    
     Route::get('/dashboard', function () {
         $user = Auth::user();
         if ($user->Role === 'Admin' || $user->Role === 'Super Admin') {
@@ -68,16 +65,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return Inertia::render('Customer/Dashboard', ['tickets' => $myTickets]); 
     })->name('customer.dashboard');
 
-    // Modul Checkout & Transaksi
     Route::get('/checkout/{event_id}', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout/{event_id}', [CheckoutController::class, 'store'])->name('checkout.store');
 
-    // Manajemen Profil
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     
-    // Setup 2FA
     Route::get('/2fa/setup', [TwoFactorController::class, 'setup'])->name('2fa.setup');
     Route::post('/2fa/verify', [TwoFactorController::class, 'verify'])->name('2fa.verify');
 });
@@ -86,12 +80,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::middleware(['auth', 'verified', '2fa_check'])->group(function () {
     
     Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
-    
-    // 👇 TAMBAHIN BARIS INI BUAT HALAMAN ANALYTICS 👇
     Route::get('/admin/analytics', [AnalyticsController::class, 'index'])->name('admin.analytics');
-
+    
+    // MASTER EVENT ROUTE (Secara otomatis ngebikin route admin.events.show)
     Route::resource('admin/events', EventController::class)->names('admin.events');
+    
+    // =========================================================================
+    // SIHIR ARSITEKTUR TAHAP 1: NESTED ROUTES KHUSUS MANAGEMENT DALAM EVENT
+    // =========================================================================
+    Route::prefix('admin/events/{event_id}')->name('admin.events.')->group(function () {
+        // Nanti di Tahap 3 kita arahin ini ke fungsi baru, sekarang kita siapin dulu jalannya
+        Route::get('/categories', [CategoryController::class, 'eventCategories'])->name('categories');
+        Route::get('/tickets', [TicketController::class, 'eventTickets'])->name('tickets');
+    });
+
+    // (Rute lama dibiarin dulu biar gak ada yang error/crash mendadak)
     Route::resource('admin/tickets', TicketController::class)->names('admin.tickets');
+    Route::resource('admin/categories', CategoryController::class)->names('admin.categories');
 
     Route::get('/admin/transactions', [TransactionController::class, 'index'])->name('admin.transactions.index');
     Route::get('/admin/customers', [CustomerController::class, 'index'])->name('admin.customers.index');

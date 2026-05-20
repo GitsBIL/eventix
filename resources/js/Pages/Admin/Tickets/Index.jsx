@@ -1,361 +1,232 @@
-import React, { useState } from 'react';
-import { Head, Link, usePage, useForm, router } from '@inertiajs/react';
+import React, { useState, useMemo } from 'react';
+import { Head, Link } from '@inertiajs/react';
 import Swal from 'sweetalert2';
 import AdminSidebar from '@/Components/AdminSidebar';
 
-export default function TicketIndex({ tickets = [], events = [], stats }) {
-    const [showModal, setShowModal] = useState(false);
-    const [isEditing, setIsEditing] = useState(false);
-    const [editId, setEditId] = useState(null);
-    const [isFixedEvent, setIsFixedEvent] = useState(false);
+export default function IssuedTicketsIndex({ issuedTickets = [], event = {}, stats = {} }) {
     const [searchTerm, setSearchTerm] = useState('');
-    const [isFilterOpen, setIsFilterOpen] = useState(false);
-    const [filterStatus, setFilterStatus] = useState('All');
+    const [activeFilter, setActiveFilter] = useState('All');
 
-    const { data, setData, post, put, processing, reset, errors } = useForm({
-        EventID: '',
-        CategoryName: '',
-        Price: '',
-        Quota: '',
-        Status: 1,
-    });
+    // Mencegah error jika tanggal belum tersedia
+    const formattedDate = event?.EventDate 
+        ? new Date(event.EventDate).toLocaleDateString('id-ID', { 
+            weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' 
+        }) 
+        : 'Tanggal Belum Ditetapkan';
 
-    const openModalNew = (eventId = null) => {
-        setIsEditing(false);
-        reset();
-        if (eventId) {
-            setData('EventID', eventId);
-            setIsFixedEvent(true);
-        } else {
-            setData('EventID', '');
-            setIsFixedEvent(false);
-        }
-        setShowModal(true);
+    const filteredTickets = useMemo(() => {
+        return issuedTickets.filter(t => {
+            const searchString = `${t.OrderNo} ${t.AttendeeName}`.toLowerCase();
+            if (!searchString.includes(searchTerm.toLowerCase())) return false;
+            
+            if (activeFilter === 'Valid / Paid') return ['paid', 'issued'].includes(t.PaymentStatus);
+            if (activeFilter === 'Pending') return t.PaymentStatus === 'pending_payment';
+            if (activeFilter === 'Cancelled') return t.PaymentStatus === 'cancelled';
+            return true;
+        });
+    }, [issuedTickets, searchTerm, activeFilter]);
+
+    const handleCompTicket = () => {
+        Swal.fire({
+            title: 'Terbitkan Tiket Gratis',
+            text: 'Fitur penerbitan tiket masuk gratis untuk sponsor atau media akan segera dikembangkan.',
+            icon: 'info',
+            background: '#0F172A',
+            color: '#fff',
+            confirmButtonColor: '#A3C957'
+        });
     };
-
-    const submit = (e) => {
-        e.preventDefault();
-        if (isEditing) {
-            put(route('admin.tickets.update', editId), { onSuccess: () => { setShowModal(false); Swal.fire('Updated', 'Ticket category updated.', 'success'); } });
-        } else {
-            post(route('admin.tickets.store'), { onSuccess: () => { setShowModal(false); reset(); Swal.fire('Created', 'New ticket category added.', 'success'); } });
-        }
-    };
-
-    const getCategoryBadge = (name) => {
-        const n = name.toLowerCase();
-        if (n.includes('vip')) return 'text-amber-400 bg-amber-500/10 border-amber-500/20';
-        if (n.includes('festival')) return 'text-blue-400 bg-blue-500/10 border-blue-500/20';
-        if (n.includes('tribune')) return 'text-purple-400 bg-purple-500/10 border-purple-500/20';
-        if (n.includes('early')) return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
-        return 'text-slate-300 bg-slate-800 border-slate-700';
-    };
-
-    const recentActivities = [
-        { title: 'New VIP ticket created', target: 'Pestapora', time: '10 mins ago', icon: '🎫' },
-        { title: '2 refunds requested', target: 'Order #992', time: '1 hour ago', icon: '💸' },
-        { title: 'QR scanned successfully', target: 'Gate 3', time: '2 hours ago', icon: '📱' },
-    ];
 
     return (
-        <div className="flex h-screen bg-[#060816] text-slate-300 font-sans overflow-hidden selection:bg-[#e8ff47] selection:text-black">
-            <Head title="Tickets Management - Eventix" />
-
-            {/* PANGGIL KOMPONEN SIDEBAR DI SINI */}
+        <div className="flex h-screen bg-[#070B17] text-slate-300 font-sans overflow-hidden selection:bg-[#A3C957]/30 selection:text-white">
+            <Head title={`Daftar Tamu - ${event?.EventName || 'Memuat...'}`} />
+            
             <AdminSidebar />
 
             <main className="flex-1 flex flex-col h-full overflow-hidden relative">
-                
-                <header className="h-16 flex items-center justify-between px-8 border-b border-[#1e293b] bg-[#0f172a] z-20 shrink-0">
-                    <div className="flex items-center gap-4">
-                        <h1 className="text-base font-bold text-white">Tickets</h1>
-                        <div className="hidden lg:flex items-center px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-md">
-                            <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">System Synced</span>
+                <div className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-[#38BDF8]/[0.015] rounded-full blur-3xl pointer-events-none"></div>
+
+                {/* WORKSPACE HEADER TERINTEGRASI */}
+                <header className="px-8 pt-8 pb-0 bg-[#070B17]/95 backdrop-blur-sm shrink-0 border-b border-white/[0.04] z-20 flex flex-col">
+                    
+                    <div className="mb-4">
+                        <p className="text-[10px] font-bold text-[#38BDF8] tracking-widest uppercase mb-3 flex items-center gap-2 drop-shadow-md">
+                            <Link href={route('admin.dashboard')} className="hover:text-white transition-colors">Operations</Link> 
+                            <span className="text-slate-500">/</span> 
+                            <Link href={route('admin.events.index')} className="hover:text-white transition-colors">Event Management</Link> 
+                            <span className="text-slate-500">/</span> 
+                            <span className="text-white">{event?.EventName}</span>
+                        </p>
+                    </div>
+
+                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-6">
+                        <div className="flex items-center gap-5">
+                            <div className="w-16 h-20 bg-[#0F172A] rounded-lg border border-white/[0.08] overflow-hidden shrink-0 shadow-lg">
+                                {event?.BannerImage ? (
+                                    <img src={`/storage/${event.BannerImage}`} alt={event.EventName} className="w-full h-full object-cover" />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center bg-slate-800 text-slate-600">
+                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                    </div>
+                                )}
+                            </div>
+                            <div>
+                                <div className="flex items-center gap-3 mb-1.5">
+                                    <h1 className="text-2xl font-bold text-white tracking-tight leading-none">{event?.EventName}</h1>
+                                    <span className="px-2.5 py-1 rounded bg-blue-500/20 border border-blue-500/30 text-blue-400 text-[10px] font-bold uppercase tracking-wider backdrop-blur-sm shadow-lg">Gate Ready</span>
+                                </div>
+                                <p className="text-xs text-slate-400 font-medium flex items-center gap-3 drop-shadow-md">
+                                    <span className="flex items-center gap-1.5"><svg className="w-4 h-4 text-[#A3C957]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg> {event?.Location || 'TBA'}</span>
+                                    <span className="text-slate-500">|</span>
+                                    <span className="flex items-center gap-1.5"><svg className="w-4 h-4 text-[#A3C957]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg> {formattedDate}</span>
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div className="flex gap-2">
+                            <button className="px-4 py-2 bg-[#0F172A] border border-white/[0.08] hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition-all shadow-sm flex items-center gap-2">
+                                <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                Ekspor CSV
+                            </button>
+                            <button onClick={handleCompTicket} className="px-5 py-2 bg-white hover:bg-slate-200 text-[#070B17] rounded-lg text-xs font-bold transition-all flex items-center gap-2 shadow-sm hover:-translate-y-0.5">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path></svg>
+                                Comp Ticket
+                            </button>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                        <div className="relative hidden md:block">
-                            <svg className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                            <input type="text" placeholder="Search ticket categories..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="bg-[#060816] border border-[#1e293b] rounded-md pl-9 pr-12 py-1.5 text-xs text-white focus:outline-none focus:border-slate-500 transition-colors w-64 placeholder-slate-600" />
-                            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                                <span className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-[9px] text-slate-400 font-mono">⌘K</span>
-                            </div>
-                        </div>
-
-                        <div className="relative">
-                            <button 
-                                onClick={() => setIsFilterOpen(!isFilterOpen)} 
-                                className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-[#060816] border border-[#1e293b] rounded-md cursor-pointer hover:border-slate-600 transition-colors"
-                            >
-                                <span className="text-xs text-slate-400">Filter: <span className="text-white font-medium">{filterStatus}</span></span>
-                                <svg className={`w-3 h-3 text-slate-500 transition-transform ${isFilterOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-                            </button>
-                            
-                            {isFilterOpen && (
-                                <div className="absolute right-0 mt-1 w-36 bg-[#0f172a] border border-[#1e293b] rounded-lg shadow-xl z-50 overflow-hidden">
-                                    <button onClick={() => {setFilterStatus('All'); setIsFilterOpen(false)}} className={`w-full text-left px-4 py-2 text-xs hover:bg-slate-800 transition-colors ${filterStatus === 'All' ? 'text-white font-bold bg-slate-800/50' : 'text-slate-400'}`}>All Status</button>
-                                    <button onClick={() => {setFilterStatus('Active'); setIsFilterOpen(false)}} className={`w-full text-left px-4 py-2 text-xs hover:bg-slate-800 transition-colors ${filterStatus === 'Active' ? 'text-emerald-400 font-bold bg-slate-800/50' : 'text-slate-400'}`}>Active (Live)</button>
-                                    <button onClick={() => {setFilterStatus('Draft'); setIsFilterOpen(false)}} className={`w-full text-left px-4 py-2 text-xs hover:bg-slate-800 transition-colors ${filterStatus === 'Draft' ? 'text-slate-300 font-bold bg-slate-800/50' : 'text-slate-400'}`}>Draft (Hidden)</button>
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="w-px h-6 bg-[#1e293b] mx-1"></div>
-
-                        <button onClick={() => openModalNew(null)} className="ml-2 px-4 py-1.5 bg-white text-slate-900 hover:bg-slate-200 rounded-md text-xs font-bold transition-all flex items-center gap-2 shadow-sm">
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
-                            New Category
-                        </button>
+                    {/* NAVIGASI TAB WORKSPACE - MENGGUNAKAN OPTIONAL CHAINING AGAR TIDAK CRASH */}
+                    <div className="flex items-center gap-8">
+                        <Link href={event?.ID ? route('admin.events.show', event.ID) : '#'} className="pb-4 text-xs font-semibold text-slate-500 hover:text-slate-300 transition-all">Dashboard Overview</Link>
+                        <Link href={event?.ID ? route('admin.events.categories', event.ID) : '#'} className="pb-4 text-xs font-semibold text-slate-500 hover:text-slate-300 transition-all">Ticket Inventory</Link>
+                        <Link href={event?.ID ? route('admin.events.tickets', event.ID) : '#'} className="pb-4 text-xs font-bold text-[#38BDF8] transition-all relative">
+                            Attendees & Guests
+                            <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[#38BDF8] rounded-t-full shadow-[0_-2px_10px_rgba(56,189,248,0.5)]"></div>
+                        </Link>
+                        <Link href="#" className="pb-4 text-xs font-semibold text-slate-500 hover:text-slate-300 transition-all">Transactions</Link>
+                        <Link href="#" className="pb-4 text-xs font-semibold text-slate-500 hover:text-slate-300 transition-all">Analytics</Link>
                     </div>
                 </header>
 
                 <div className="flex-1 overflow-y-auto p-8 no-scrollbar scroll-smooth">
                     
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                        <div className="bg-[#0f172a] p-5 rounded-xl border border-[#1e293b] flex flex-col justify-between">
-                            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Total Categories</p>
-                            <h3 className="text-2xl font-black text-white mt-2">{stats?.totalCategories || 0}</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-8">
+                        <div className="bg-[#0F172A] p-5 rounded-xl border border-white/[0.04] shadow-sm flex flex-col justify-between">
+                            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-4">Valid Tickets (Issued)</p>
+                            <h3 className="text-3xl font-light text-white tracking-tight">{stats?.totalIssued || 0} <span className="text-xs text-slate-500 font-medium">pax</span></h3>
                         </div>
-                        <div className="bg-[#0f172a] p-5 rounded-xl border border-[#1e293b] flex flex-col justify-between">
-                            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Tickets Sold Today</p>
-                            <div className="mt-2 flex items-baseline gap-2">
-                                <h3 className="text-2xl font-black text-white">{stats?.ticketsSoldToday || 0}</h3>
-                                <span className="text-xs text-emerald-400 font-bold">Live</span>
+                        <div className="bg-[#0F172A] p-5 rounded-xl border border-white/[0.04] shadow-sm flex flex-col justify-between">
+                            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-amber-400"></span> Pending Payment</p>
+                            <h3 className="text-3xl font-light text-white tracking-tight">{stats?.pendingTickets || 0} <span className="text-xs text-slate-500 font-medium">tickets</span></h3>
+                        </div>
+                        <div className="bg-[#0F172A] p-5 rounded-xl border border-white/[0.04] shadow-sm flex flex-col justify-between">
+                            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-[#38BDF8]"></span> Gate Checked-In</p>
+                            <div className="flex items-baseline gap-2">
+                                <h3 className="text-3xl font-light text-white tracking-tight">{stats?.checkedIn || 0}</h3>
+                                <span className="text-[10px] text-slate-500">dari {stats?.totalIssued || 0} hadir</span>
                             </div>
                         </div>
-                        <div className="bg-[#0f172a] p-5 rounded-xl border border-[#1e293b] flex flex-col justify-between">
-                            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Pending Verification</p>
-                            <div className="mt-2 flex items-baseline gap-2">
-                                <h3 className="text-2xl font-black text-white">{stats?.pendingTransactions || 0}</h3>
-                                <span className="text-xs text-amber-400 font-medium">Action needed</span>
+                        <div className="bg-gradient-to-br from-[#0F172A] to-[#070B17] p-5 rounded-xl border border-white/[0.04] shadow-sm flex flex-col justify-between relative overflow-hidden">
+                            <div className="relative z-10">
+                                <p className="text-[10px] font-bold text-[#A3C957] uppercase tracking-widest mb-4">Gross Revenue Volume</p>
+                                <h3 className="text-xl font-bold text-white tracking-tight">{stats?.grossRevenue || 'Rp 0'}</h3>
                             </div>
-                        </div>
-                        <div className="bg-gradient-to-br from-slate-800 to-[#0f172a] p-5 rounded-xl border border-[#1e293b] flex flex-col justify-between">
-                            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Revenue Impact</p>
-                            <h3 className="text-2xl font-black text-white mt-2">{stats?.revenue || 'Rp 0'}</h3>
+                            <svg className="w-24 h-24 absolute -right-4 -bottom-4 text-white/[0.02]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"></path></svg>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
-                        
-                        <div className="xl:col-span-3 space-y-8">
-                            {events.length > 0 ? events.map((event) => {
-                                const eventTickets = tickets.filter(t => {
-                                    if (t.EventID !== event.ID) return false;
-                                    if (filterStatus === 'Active') return t.Status === 1 || t.Status === '1';
-                                    if (filterStatus === 'Draft') return t.Status === 0 || t.Status === '0';
-                                    return true;
-                                });
+                    <div className="flex items-center justify-between mb-4 border-b border-white/[0.03]">
+                        <div className="flex items-center gap-6">
+                            {['All', 'Valid / Paid', 'Pending', 'Cancelled'].map(tab => (
+                                <button key={tab} onClick={() => setActiveFilter(tab)} className={`pb-2.5 text-xs font-semibold transition-all relative ${activeFilter === tab ? 'text-white' : 'text-slate-600 hover:text-slate-300'}`}>
+                                    {tab}
+                                    {activeFilter === tab && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-white shadow-[0_-2px_10px_rgba(255,255,255,0.3)]"></div>}
+                                </button>
+                            ))}
+                        </div>
+                        <div className="relative mb-2">
+                            <svg className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            <input type="text" placeholder="Cari Kode atau Nama..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="bg-[#0F172A] border border-white/[0.05] focus:border-[#38BDF8]/50 rounded-lg pl-9 pr-4 py-1.5 text-xs text-white outline-none transition-all w-64 shadow-inner" />
+                        </div>
+                    </div>
 
-                                const formattedDate = event.EventDate ? new Date(event.EventDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'TBA';
-                                const totalSold = eventTickets.reduce((acc, t) => acc + (t.Sold || 0), 0);
-                                
-                                return (
-                                    <div key={event.ID} className="bg-[#0f172a] rounded-xl border border-[#1e293b] overflow-hidden shadow-sm flex flex-col">
-                                        
-                                        <div className="p-5 border-b border-[#1e293b] flex justify-between items-start bg-[#0a0d14]">
-                                            <div className="flex gap-4">
-                                                <div className="w-14 h-20 rounded-md bg-slate-800 shrink-0 border border-slate-700 overflow-hidden shadow-sm">
-                                                    {event.BannerImage ? (
-                                                        <img src={`/storage/${event.BannerImage}`} className="w-full h-full object-cover" alt="Poster" />
-                                                    ) : (
-                                                        <div className="w-full h-full flex items-center justify-center text-slate-600 bg-[#060816]">
-                                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    <div className="bg-[#0F172A] rounded-xl border border-white/[0.04] shadow-sm overflow-hidden flex flex-col">
+                        <div className="overflow-x-auto">
+                            {filteredTickets.length > 0 ? (
+                                <table className="w-full text-left whitespace-nowrap">
+                                    <thead className="bg-[#070B17]/40 border-b border-white/[0.06]">
+                                        <tr>
+                                            <th className="px-6 py-5 text-xs font-semibold text-slate-500">Kode Booking</th>
+                                            <th className="px-6 py-5 text-xs font-semibold text-slate-500">Info Pengunjung</th>
+                                            <th className="px-6 py-5 text-xs font-semibold text-slate-500">Kategori Tiket</th>
+                                            <th className="px-6 py-5 text-xs font-semibold text-slate-500 text-center">Qty</th>
+                                            <th className="px-6 py-5 text-xs font-semibold text-slate-500">Status</th>
+                                            <th className="px-6 py-5 text-right text-xs font-semibold text-slate-500">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-white/[0.04]">
+                                        {filteredTickets.map((t) => {
+                                            const isPaid = ['paid', 'issued'].includes(t.PaymentStatus);
+                                            const isPending = t.PaymentStatus === 'pending_payment';
+                                            const dateObj = new Date(t.PurchaseDate);
+                                            const formattedDateTime = dateObj.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+                                            return (
+                                                <tr key={t.ItemID} className="transition-all duration-200 hover:bg-white/[0.02] even:bg-[#070B17]/30 border-l-2 border-l-transparent hover:border-l-[#38BDF8] group">
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-8 h-8 rounded bg-slate-800/50 flex items-center justify-center border border-white/[0.05]">
+                                                                <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path></svg>
+                                                            </div>
+                                                            <div>
+                                                                <p className="font-bold text-sm font-mono text-white tracking-wider">{t.OrderNo}</p>
+                                                                <p className="text-[10px] text-slate-500 mt-0.5">{formattedDateTime}</p>
+                                                            </div>
                                                         </div>
-                                                    )}
-                                                </div>
-                                                <div>
-                                                    <h2 className="text-base font-bold text-white mb-1">{event.EventName}</h2>
-                                                    <p className="text-xs text-slate-400 font-medium">
-                                                        {event.Location || 'TBA'} • {formattedDate} • <span className="text-white">{eventTickets.length} Categories</span> • <span className="text-emerald-400">{totalSold} Tickets Sold</span>
-                                                    </p>
-                                                    <div className="mt-2.5 flex items-center gap-2">
-                                                        {event.Status === 1 || event.Status === '1' 
-                                                            ? <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] font-bold rounded uppercase tracking-wider">Live Event</span>
-                                                            : <span className="px-2 py-0.5 bg-slate-800 text-slate-400 border border-slate-700 text-[9px] font-bold rounded uppercase tracking-wider">Draft</span>
-                                                        }
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <button onClick={() => openModalNew(event.ID)} className="px-3 py-1.5 bg-slate-800 border border-slate-700 text-slate-300 hover:text-white hover:border-slate-500 rounded text-[10px] font-bold uppercase tracking-widest transition-all">
-                                                + Add Category
-                                            </button>
-                                        </div>
-
-                                        <div className="overflow-x-auto">
-                                            {eventTickets.length > 0 ? (
-                                                <table className="w-full text-left border-collapse">
-                                                    <thead className="bg-[#0f172a]">
-                                                        <tr className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider border-b border-[#1e293b]">
-                                                            <th className="px-6 py-3">Category Identity</th>
-                                                            <th className="px-6 py-3">Price</th>
-                                                            <th className="px-6 py-3 w-48">Sales Progress</th>
-                                                            <th className="px-6 py-3">Status</th>
-                                                            <th className="px-6 py-3 text-right">Actions</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody className="divide-y divide-[#1e293b]">
-                                                        {eventTickets.map((ticket) => {
-                                                            const sold = ticket.Sold || 0;
-                                                            const progress = Math.min(100, Math.round((sold / Math.max(1, ticket.Quota)) * 100));
-                                                            const isSoldOut = progress >= 100;
-
-                                                            return (
-                                                                <tr key={ticket.ID} className="hover:bg-slate-800/30 transition-colors duration-200 group">
-                                                                    <td className="px-6 py-4">
-                                                                        <span className={`px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider rounded border ${getCategoryBadge(ticket.CategoryName)}`}>
-                                                                            {ticket.CategoryName}
-                                                                        </span>
-                                                                    </td>
-                                                                    <td className="px-6 py-4">
-                                                                        <p className={`font-semibold text-sm ${isSoldOut ? 'text-slate-500 line-through' : 'text-white'}`}>
-                                                                            Rp {Number(ticket.Price).toLocaleString('id-ID')}
-                                                                        </p>
-                                                                    </td>
-                                                                    <td className="px-6 py-4">
-                                                                        <div className="flex justify-between items-end mb-1.5">
-                                                                            <span className="text-[10px] text-slate-400 font-medium">{sold} / {ticket.Quota} Sold</span>
-                                                                            <span className="text-[10px] text-slate-500 font-mono">{progress}%</span>
-                                                                        </div>
-                                                                        <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                                                                            <div className={`h-full rounded-full ${isSoldOut ? 'bg-rose-500' : 'bg-emerald-400'}`} style={{ width: `${progress}%` }}></div>
-                                                                        </div>
-                                                                    </td>
-                                                                    <td className="px-6 py-4">
-                                                                        {isSoldOut ? (
-                                                                            <span className="text-rose-400 text-[10px] font-bold flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Sold Out</span>
-                                                                        ) : ticket.Status === 1 || ticket.Status === '1' ? (
-                                                                            <span className="text-emerald-400 text-[10px] font-bold flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active</span>
-                                                                        ) : (
-                                                                            <span className="text-slate-500 text-[10px] font-bold flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-slate-500"></span> Hidden</span>
-                                                                        )}
-                                                                    </td>
-                                                                    <td className="px-6 py-4 text-right">
-                                                                        <div className="flex gap-2 justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                                                            <button onClick={() => { setIsEditing(true); setEditId(ticket.ID); setData({ EventID: ticket.EventID, CategoryName: ticket.CategoryName, Price: ticket.Price, Quota: ticket.Quota, Status: ticket.Status }); setIsFixedEvent(false); setShowModal(true); }} className="p-1.5 text-slate-400 hover:text-white bg-slate-800 border border-slate-700 hover:border-slate-500 rounded transition-all shadow-sm" title="Edit Category">
-                                                                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                                                                            </button>
-                                                                            <button onClick={() => { Swal.fire({ title: 'Delete Ticket?', text: 'Cannot be undone.', icon: 'warning', showCancelButton: true, confirmButtonColor: '#e11d48', cancelButtonColor: '#334155', background: '#0f172a', color: '#fff' }).then((r) => { if(r.isConfirmed) router.delete(route('admin.tickets.destroy', ticket.ID)) }); }} className="p-1.5 text-slate-400 hover:text-rose-400 bg-slate-800 border border-slate-700 hover:border-rose-500/50 hover:bg-rose-500/10 rounded transition-all shadow-sm" title="Delete">
-                                                                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                                                            </button>
-                                                                        </div>
-                                                                    </td>
-                                                                </tr>
-                                                            );
-                                                        })}
-                                                    </tbody>
-                                                </table>
-                                            ) : (
-                                                <div className="px-6 py-12 flex flex-col items-center justify-center bg-[#060816]/50">
-                                                    <div className="w-12 h-12 bg-slate-800 rounded-full flex items-center justify-center mb-3 border border-slate-700">
-                                                        <span className="text-xl">🎫</span>
-                                                    </div>
-                                                    <p className="text-sm font-semibold text-slate-300">No ticket categories yet</p>
-                                                    <p className="text-xs text-slate-500 mt-1 max-w-[250px] text-center">Create your first ticket category to start selling tickets for this event.</p>
-                                                    <button onClick={() => openModalNew(event.ID)} className="mt-4 px-4 py-2 bg-white text-slate-900 rounded-md text-xs font-bold hover:bg-slate-200 transition-colors">
-                                                        + Add Ticket Category
-                                                    </button>
-                                                </div>
-                                            )}
-                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <p className="font-semibold text-sm text-slate-200">{t.AttendeeName || 'Pembeli Tamu'}</p>
+                                                        <p className="text-[11px] text-slate-500 mt-0.5">{t.AttendeeEmail || 'Tidak ada email'}</p>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <p className="font-bold text-sm text-white">{t.CategoryName}</p>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-center">
+                                                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-800 text-white font-bold text-xs border border-slate-600">
+                                                            {t.Qty}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        {isPaid ? (
+                                                            <span className="inline-flex px-2.5 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold rounded uppercase tracking-widest">Valid / Paid</span>
+                                                        ) : isPending ? (
+                                                            <span className="inline-flex px-2.5 py-1 bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[10px] font-bold rounded uppercase tracking-widest">Pending</span>
+                                                        ) : (
+                                                            <span className="inline-flex px-2.5 py-1 bg-rose-500/10 text-rose-500 border border-rose-500/20 text-[10px] font-bold rounded uppercase tracking-widest">Cancelled</span>
+                                                        )}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-right">
+                                                        <button className="px-3 py-1.5 bg-[#070B17] hover:bg-slate-800 border border-white/[0.05] hover:border-white/[0.2] text-slate-300 hover:text-white rounded text-xs font-semibold transition-all">
+                                                            Detail Transaksi
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            ) : (
+                                <div className="px-6 py-24 flex flex-col items-center justify-center text-center bg-[#070B17]/20">
+                                    <div className="w-16 h-16 bg-[#0F172A] rounded-full flex items-center justify-center mb-5 border border-white/[0.04] text-slate-600 shadow-inner">
+                                        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path></svg>
                                     </div>
-                                );
-                            }) : (
-                                <div className="p-12 text-center bg-[#0f172a] rounded-xl border border-[#1e293b]">
-                                    <p className="text-slate-500 font-bold uppercase tracking-widest">No Events Found</p>
+                                    <h3 className="text-base font-semibold text-white mb-2 leading-tight">Belum Ada Tiket Diterbitkan</h3>
+                                    <p className="text-xs text-slate-500 max-w-xs mb-8 leading-relaxed">Daftar tamu dan pembeli tiket untuk acara ini akan muncul di sini secara otomatis.</p>
                                 </div>
                             )}
                         </div>
-
-                        <div className="xl:col-span-1">
-                            <div className="bg-[#0f172a] rounded-xl border border-[#1e293b] flex flex-col sticky top-8">
-                                <div className="p-4 border-b border-[#1e293b] flex justify-between items-center">
-                                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">System Logs</h3>
-                                    <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                                </div>
-                                <div className="p-5 flex-1">
-                                    <div className="relative before:absolute before:inset-y-0 before:left-[11px] before:w-px before:bg-[#1e293b]">
-                                        {recentActivities.map((act, i) => (
-                                            <div key={i} className="relative flex gap-4 mb-6 last:mb-0">
-                                                <div className="w-6 h-6 rounded-full bg-slate-800 border border-slate-700 flex shrink-0 items-center justify-center relative z-10 text-[10px]">
-                                                    {act.icon}
-                                                </div>
-                                                <div className="flex-1 min-w-0 pt-0.5">
-                                                    <p className="text-[11px] font-semibold text-slate-300 leading-snug">{act.title}</p>
-                                                    <p className="text-[10px] text-slate-500 mt-1">{act.target} • {act.time}</p>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
                     </div>
                 </div>
-
-                {showModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#060816]/90 backdrop-blur-sm overflow-y-auto">
-                        <div className="bg-[#0f172a] border border-[#1e293b] rounded-xl w-full max-w-xl my-auto shadow-2xl">
-                            <div className="p-5 border-b border-[#1e293b] flex justify-between items-center bg-slate-800/20 rounded-t-xl">
-                                <h2 className="text-sm font-bold text-white">{isEditing ? 'Update Ticket Category' : 'Create New Ticket'}</h2>
-                                <button onClick={() => setShowModal(false)} className="text-slate-500 hover:text-white transition-colors p-1 hover:bg-slate-800 rounded"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" strokeWidth="2" strokeLinecap="round"></path></svg></button>
-                            </div>
-                            
-                            <form onSubmit={submit} className="p-6 grid grid-cols-2 gap-5">
-                                <div className="col-span-2">
-                                    <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1.5">Target Event</label>
-                                    {isFixedEvent ? (
-                                        <input type="text" value={events.find(ev => ev.ID === data.EventID)?.EventName || ''} disabled className="w-full bg-[#060816]/50 border border-[#1e293b] rounded-lg px-3 py-2 text-sm text-slate-500 cursor-not-allowed outline-none" />
-                                    ) : (
-                                        <select value={data.EventID} onChange={e => setData('EventID', e.target.value)} className="w-full bg-[#060816] border border-[#1e293b] rounded-lg px-3 py-2 text-sm text-white focus:border-slate-400 outline-none transition-all cursor-pointer appearance-none" required>
-                                            <option value="">-- Choose Event --</option>
-                                            {events.map((ev) => (<option key={ev.ID} value={ev.ID}>{ev.EventName}</option>))}
-                                        </select>
-                                    )}
-                                </div>
-                                
-                                <div className="col-span-2">
-                                    <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1.5">Category Name</label>
-                                    <select value={data.CategoryName} onChange={e => setData('CategoryName', e.target.value)} className="w-full bg-[#060816] border border-[#1e293b] rounded-lg px-3 py-2 text-sm text-white focus:border-slate-400 outline-none transition-all appearance-none cursor-pointer" required>
-                                        <option value="">-- Select Category --</option>
-                                        <option value="VVIP Exclusive">VVIP Exclusive</option>
-                                        <option value="VIP Early Access">VIP Early Access</option>
-                                        <option value="Festival Regular">Festival Regular</option>
-                                        <option value="Tribune A">Tribune A</option>
-                                        <option value="Presale Ticket">Presale Ticket</option>
-                                    </select>
-                                </div>
-
-                                <div className="col-span-2 md:col-span-1">
-                                    <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1.5">Price (Rp)</label>
-                                    <input type="number" value={data.Price} onChange={e => setData('Price', e.target.value)} className="w-full bg-[#060816] border border-[#1e293b] rounded-lg px-3 py-2 text-sm text-white focus:border-slate-400 outline-none transition-all" placeholder="500000" required />
-                                </div>
-                                
-                                <div className="col-span-2 md:col-span-1">
-                                    <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1.5">Quota Allocation</label>
-                                    <input type="number" value={data.Quota} onChange={e => setData('Quota', e.target.value)} className="w-full bg-[#060816] border border-[#1e293b] rounded-lg px-3 py-2 text-sm text-white focus:border-slate-400 outline-none transition-all" placeholder="100" required />
-                                </div>
-
-                                <div className="col-span-2">
-                                    <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1.5">Visibility Status</label>
-                                    <select value={data.Status} onChange={e => setData('Status', e.target.value)} className="w-full bg-[#060816] border border-[#1e293b] rounded-lg px-3 py-2 text-sm text-white focus:border-slate-400 outline-none transition-all appearance-none cursor-pointer" required>
-                                        <option value="1">Active (Available for purchase)</option>
-                                        <option value="0">Hidden (Draft / Upcoming)</option>
-                                    </select>
-                                </div>
-
-                                <div className="col-span-2 pt-4 flex justify-end gap-3 border-t border-[#1e293b] mt-2">
-                                    <button type="button" onClick={() => setShowModal(false)} className="px-5 py-2 text-xs font-semibold text-slate-400 hover:text-white transition-all">Cancel</button>
-                                    <button type="submit" disabled={processing} className="px-6 py-2 bg-white text-slate-900 hover:bg-slate-200 rounded-lg text-xs font-bold transition-all shadow-sm disabled:opacity-50">
-                                        {processing ? 'Saving...' : 'Save Configuration'}
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                )}
             </main>
         </div>
     );
