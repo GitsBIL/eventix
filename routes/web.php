@@ -10,7 +10,9 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\EventController;
 use App\Http\Controllers\Admin\TicketController;
 use App\Http\Controllers\Admin\TransactionController;
+use App\Http\Controllers\Admin\RefundController;
 use App\Http\Controllers\Admin\CustomerController;
+use App\Http\Controllers\Admin\MidtransLogController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -44,8 +46,10 @@ Route::get('/', function () {
 Route::get('auth/google', [GoogleController::class, 'redirect'])->name('google.redirect');
 Route::get('auth/google/callback', [GoogleController::class, 'callback'])->name('google.callback');
 
-// Area User Terautentikasi (Customer)
-Route::middleware(['auth', 'verified'])->group(function () {
+// ==================================================
+// AREA USER (CUSTOMER) - Middleware 'verified' dihapus
+// ==================================================
+Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', function () {
         $user = Auth::user();
         if ($user->Role === 'Admin' || $user->Role === 'Super Admin') {
@@ -76,8 +80,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/2fa/verify', [TwoFactorController::class, 'verify'])->name('2fa.verify');
 });
 
-// Area Admin (Wajib 2FA)
-Route::middleware(['auth', 'verified', '2fa_check'])->group(function () {
+// ==================================================
+// AREA ADMIN - Middleware 'verified' juga dihapus
+// ==================================================
+Route::middleware(['auth', '2fa_check'])->group(function () {
     
     Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
     Route::get('/admin/analytics', [AnalyticsController::class, 'index'])->name('admin.analytics');
@@ -89,7 +95,6 @@ Route::middleware(['auth', 'verified', '2fa_check'])->group(function () {
     // SIHIR ARSITEKTUR TAHAP 1: NESTED ROUTES KHUSUS MANAGEMENT DALAM EVENT
     // =========================================================================
     Route::prefix('admin/events/{event_id}')->name('admin.events.')->group(function () {
-        // Nanti di Tahap 3 kita arahin ini ke fungsi baru, sekarang kita siapin dulu jalannya
         Route::get('/categories', [CategoryController::class, 'eventCategories'])->name('categories');
         Route::get('/tickets', [TicketController::class, 'eventTickets'])->name('tickets');
     });
@@ -99,6 +104,11 @@ Route::middleware(['auth', 'verified', '2fa_check'])->group(function () {
     Route::resource('admin/categories', CategoryController::class)->names('admin.categories');
 
     Route::get('/admin/transactions', [TransactionController::class, 'index'])->name('admin.transactions.index');
+    Route::get('/admin/refunds', [RefundController::class, 'index'])->name('admin.refunds.index');
+    
+    // Tambahan Rute Midtrans Logs
+    Route::get('/admin/midtrans-logs', [MidtransLogController::class, 'index'])->name('admin.midtrans-logs.index');
+    
     Route::get('/admin/customers', [CustomerController::class, 'index'])->name('admin.customers.index');
 });
 

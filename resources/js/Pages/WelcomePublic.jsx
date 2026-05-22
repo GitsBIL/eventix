@@ -1,123 +1,272 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Head, Link, usePage } from '@inertiajs/react';
 
 export default function WelcomePublic({ publicEvents = [] }) {
     const { auth } = usePage().props;
-
-    // Logika cek apakah user adalah Admin
+    
+    // [AUTH] Check if the current user has administrative privileges
     const isAdmin = auth.user && (auth.user.Role === 'Admin' || auth.user.Role === 'Super Admin');
+    
+    // [STATE] Manage active category filter for the event grid
+    const [activeCategory, setActiveCategory] = useState('All');
+    const categories = ['All', 'Music Festival', 'Jazz', 'Indie', 'Pop', 'EDM', 'Comedy'];
+
+    /**
+     * [UTILS] Smart Image Path Resolver
+     * Safely formats image paths from the database to ensure absolute URLs, 
+     * preventing broken images across different routing depths.
+     * Fallbacks to a default Unsplash image if no path is provided.
+     */
+    const getImageUrl = (rawPath) => {
+        if (!rawPath) return 'https://images.unsplash.com/photo-1540039155733-d7696d4eb98e?w=1600';
+        if (rawPath.startsWith('http')) return rawPath;
+        if (rawPath.startsWith('/storage/')) return rawPath;
+        if (rawPath.startsWith('storage/')) return `/${rawPath}`;
+        return `/storage/${rawPath}`;
+    };
 
     return (
-        <div className="min-h-screen bg-[#050505] text-gray-300 font-sans selection:bg-[#e8ff47] selection:text-black">
-            <Head title="EVENTIX - Premium Concert Ticketing Platform" />
+        <div className="min-h-screen bg-[#050505] text-slate-300 font-sans selection:bg-[#e8ff47] selection:text-black">
+            <Head title="EVENTIX LIVE - Official Ticketing Platform" />
 
-            {/* Navigation Bar */}
-            <nav className="fixed top-0 w-full z-50 bg-[#050505]/80 backdrop-blur-xl border-b border-white/5 transition-all duration-300">
-                <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <span className="text-xl font-black tracking-tighter text-white uppercase flex items-center gap-1">
-                            EVEN<span className="text-[#e8ff47]">TIX</span>
-                        </span>
+            {/* =========================================
+                1. GLOBAL NAVIGATION BAR
+            ========================================== */}
+            <nav className="fixed top-0 w-full z-50 bg-[#050505]/70 backdrop-blur-xl border-b border-white/5 transition-all duration-300">
+                <div className="max-w-[1400px] mx-auto px-6 md:px-10 h-20 flex items-center justify-between">
+                    
+                    {/* Brand & Main Links */}
+                    <div className="flex items-center gap-12">
+                        <Link href="/" className="flex items-center gap-3 group">
+                            <img src="/images/logo.png" alt="Eventix Logo" className="h-8 w-auto group-hover:scale-105 transition duration-300" 
+                                 onError={(e) => { e.target.style.display = 'none' }} 
+                            />
+                            <div className="text-2xl font-black tracking-tighter text-white flex items-center gap-2">
+                                EVEN<span className="text-[#e8ff47]">TIX</span>
+                                <span className="px-1.5 py-0.5 rounded text-[8px] font-black tracking-widest uppercase bg-[#e8ff47]/10 text-[#e8ff47] border border-[#e8ff47]/20 relative top-[-2px]">
+                                    Live
+                                </span>
+                            </div>
+                        </Link>
+
+                        <div className="hidden md:flex items-center gap-8 text-sm font-medium">
+                            <a href="#events" className="text-white relative group">
+                                Explore
+                                <span className="absolute -bottom-1.5 left-0 w-full h-[2px] bg-[#e8ff47] rounded-full"></span>
+                            </a>
+                            <a href="#" className="text-slate-400 hover:text-white transition-colors relative group">
+                                Cities
+                                <span className="absolute -bottom-1.5 left-0 w-0 h-[2px] bg-white rounded-full transition-all duration-300 group-hover:w-full"></span>
+                            </a>
+                            <a href="#" className="text-slate-400 hover:text-white transition-colors relative group">
+                                Help Center
+                                <span className="absolute -bottom-1.5 left-0 w-0 h-[2px] bg-white rounded-full transition-all duration-300 group-hover:w-full"></span>
+                            </a>
+                        </div>
                     </div>
 
-                    <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-400">
-                        <Link href="/" className="text-white">Home</Link>
-                        <a href="#events" className="hover:text-[#e8ff47] transition-colors">Events</a>
-                        <Link href={route('customer.dashboard')} className="hover:text-[#e8ff47] transition-colors">My Tickets</Link>
-                    </div>
-
-                    <div className="flex items-center gap-4">
+                    {/* User Actions & Auth State */}
+                    <div className="flex items-center gap-6">
                         {auth.user ? (
-                            <div className="flex items-center gap-4">
-                                {isAdmin && (
-                                    <Link href={route('admin.dashboard')} className="text-xs font-bold text-gray-400 hover:text-white transition-colors">Admin Console</Link>
-                                )}
-                                <Link href={isAdmin ? route('admin.dashboard') : route('customer.dashboard')} className="flex items-center gap-2 hover:scale-105 transition-transform">
-                                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#e8ff47] to-[#b3c733] p-[1px] shadow-[0_0_10px_rgba(232,255,71,0.2)]">
-                                        <div className="w-full h-full bg-[#111] rounded-full flex items-center justify-center text-xs font-bold text-white uppercase">
+                            <div className="flex items-center gap-5">
+                                <Link href={isAdmin ? route('admin.dashboard') : route('customer.dashboard')} className="hidden sm:block text-sm font-medium text-slate-300 hover:text-white transition">
+                                    {isAdmin ? 'Admin Console' : 'My Tickets'}
+                                </Link>
+
+                                {/* Profile Dropdown Menu */}
+                                <div className="relative group cursor-pointer">
+                                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#e8ff47] to-[#b3c733] p-[1.5px] shadow-[0_0_15px_rgba(232,255,71,0.15)] group-hover:shadow-[0_0_20px_rgba(232,255,71,0.3)] transition-all">
+                                        <div className="w-full h-full bg-[#111] rounded-full flex items-center justify-center text-sm font-bold text-white uppercase">
                                             {auth.user.FullName.charAt(0)}
                                         </div>
                                     </div>
-                                </Link>
+                                    
+                                    <div className="absolute right-0 mt-2 w-56 bg-[#0a0a0a] border border-slate-800 rounded-2xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 overflow-hidden backdrop-blur-xl">
+                                        <div className="p-2 flex flex-col">
+                                            <div className="px-3 py-3 border-b border-slate-800/80 mb-1">
+                                                <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mb-1">Signed in as</p>
+                                                <p className="text-sm text-white font-medium truncate">{auth.user.FullName}</p>
+                                            </div>
+                                            <Link href={route('profile.edit')} className="px-3 py-2 text-sm text-slate-300 hover:text-white hover:bg-slate-800/50 rounded-lg transition flex items-center gap-2">
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                                Profile Setup
+                                            </Link>
+                                            <Link href={isAdmin ? route('admin.dashboard') : route('customer.dashboard')} className="px-3 py-2 text-sm text-slate-300 hover:text-white hover:bg-slate-800/50 rounded-lg transition flex items-center gap-2">
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path></svg>
+                                                My Orders
+                                            </Link>
+                                            <Link href={route('logout')} method="post" as="button" className="mt-1 px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition text-left flex items-center gap-2">
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                                                Log Out
+                                            </Link>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         ) : (
-                            <>
-                                <Link href={route('login')} className="text-sm font-medium text-gray-300 hover:text-white transition-colors">Log In</Link>
-                                <Link href={route('register')} className="px-4 py-2 bg-[#e8ff47] text-black text-sm font-bold rounded-lg hover:bg-[#d4ed35] transition-colors hidden sm:block">Sign Up</Link>
-                            </>
+                            <div className="flex gap-4 items-center">
+                                <Link href={route('login')} className="text-sm font-medium text-slate-400 hover:text-white transition-colors">Log In</Link>
+                                <Link href={route('register')} className="px-5 py-2.5 bg-white text-black text-sm font-bold rounded-lg hover:bg-[#e8ff47] transition shadow-[0_0_15px_rgba(255,255,255,0.1)] hover:shadow-[0_0_20px_rgba(232,255,71,0.2)] hidden sm:block">Sign Up</Link>
+                            </div>
                         )}
+
+                        <button className="md:hidden text-slate-300 hover:text-white transition">
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                        </button>
                     </div>
                 </div>
             </nav>
 
-            {/* Hero Section */}
-            <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden flex items-center justify-center min-h-[80vh]">
-                <div className="absolute inset-0 z-0">
-                    <img src="https://images.unsplash.com/photo-1533174000220-1110a30b42f1?q=80&w=2000" alt="Concert" className="w-full h-full object-cover opacity-20" />
-                    <div className="absolute inset-0 bg-gradient-to-b from-[#050505]/60 to-[#050505]"></div>
+            {/* =========================================
+                2. HERO & SEARCH SECTION
+            ========================================== */}
+            <section className="pt-36 pb-16 px-6 max-w-[1200px] mx-auto flex flex-col items-center text-center">
+                <span className="px-4 py-1.5 text-[10px] font-bold bg-white/5 text-[#e8ff47] rounded-full uppercase tracking-widest mb-6 border border-white/10 shadow-[0_0_15px_rgba(232,255,71,0.05)] flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-[#e8ff47] rounded-full animate-pulse"></span>
+                    Official Ticketing Partner
+                </span>
+                <h1 className="text-5xl md:text-7xl font-black text-white tracking-tighter leading-[1.1] mb-6 max-w-4xl">
+                    Official Ticketing Platform for Music & Live Events.
+                </h1>
+                <p className="text-slate-400 text-lg max-w-2xl mb-12 font-medium">Discover live music experiences, secure your spots, and enjoy seamless instant payments across Indonesia.</p>
+
+                {/* Event Discovery Form */}
+                <div className="w-full max-w-3xl bg-[#0a0a0a]/80 backdrop-blur-md p-2 rounded-2xl flex flex-col md:flex-row gap-2 border border-slate-800 shadow-2xl">
+                    <div className="flex-1 flex items-center bg-[#111] rounded-xl px-5 py-4 border border-white/5 focus-within:border-[#e8ff47]/50 transition">
+                        <svg className="w-5 h-5 text-slate-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        <input type="text" placeholder="Search events, artists, or venues..." className="w-full bg-transparent text-white text-sm outline-none placeholder:text-slate-500" />
+                    </div>
+                    <div className="md:w-48 flex items-center bg-[#111] rounded-xl px-5 py-4 border border-white/5 cursor-pointer hover:bg-[#151515] transition">
+                        <span className="text-sm text-slate-400 w-full text-left">All Cities</span>
+                        <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                    <button className="bg-[#e8ff47] text-black px-8 py-4 rounded-xl font-bold text-sm hover:bg-white transition-all shadow-[0_0_20px_rgba(232,255,71,0.15)]">Find Events</button>
                 </div>
-                <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
-                    <h1 className="text-5xl md:text-7xl font-black text-white tracking-tighter leading-[1.1] mb-6">
-                        Experience Concerts <br />
-                        <span className="text-[#e8ff47]">Like Never Before.</span>
-                    </h1>
-                    <p className="text-lg text-gray-400 max-w-2xl mx-auto mb-10 font-medium">Platform reservasi tiket konser terpercaya dengan sistem pembayaran instan.</p>
-                    <div className="flex justify-center gap-4">
-                        <a href="#events" className="px-8 py-3.5 rounded-xl bg-[#e8ff47] text-black font-black uppercase tracking-widest text-xs hover:scale-105 transition-all shadow-[0_0_20px_rgba(232,255,71,0.2)]">Explore Events</a>
+            </section>
+
+            {/* =========================================
+                3. TRUSTED PARTNERS (SOCIAL PROOF)
+            ========================================== */}
+            <section className="py-10 border-y border-white/5 bg-[#080808]">
+                <div className="max-w-[1200px] mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6 opacity-60 hover:opacity-100 grayscale hover:grayscale-0 transition duration-500">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 whitespace-nowrap">Trusted Event Partners</p>
+                    <div className="flex flex-wrap justify-center md:justify-end gap-8 md:gap-16 font-black text-xl md:text-2xl tracking-tighter text-slate-600">
+                        <span className="hover:text-white transition cursor-default">SYNCHRONIZE</span>
+                        <span className="hover:text-white transition cursor-default">PESTAPORA</span>
+                        <span className="hover:text-white transition cursor-default">JOYLAND</span>
+                        <span className="hidden sm:block hover:text-white transition cursor-default">HAMMERSONIC</span>
                     </div>
                 </div>
             </section>
 
-            {/* EVENTS SECTION */}
-            <section id="events" className="max-w-7xl mx-auto px-6 py-24">
-                <h2 className="text-3xl font-black text-white tracking-tight mb-12 uppercase flex items-center gap-3">
-                    Trending Concerts <span className="animate-bounce">🔥</span>
-                </h2>
+            {/* =========================================
+                4. MAIN EVENT CATALOG
+            ========================================== */}
+            <main id="events" className="max-w-[1200px] mx-auto px-6 py-20">
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {/* Hero Featured Event */}
+                <div className="mb-20">
+                    <div className="flex justify-between items-end mb-8">
+                        <h2 className="text-2xl font-black text-white tracking-tight">Featured Experience</h2>
+                    </div>
+                    
+                    {publicEvents.length > 0 ? (
+                        <div className="relative aspect-[21/9] md:aspect-[21/7] rounded-[2rem] overflow-hidden group border border-slate-800/80 shadow-2xl">
+                            <img src={getImageUrl(publicEvents[0].image || publicEvents[0].BannerImage)} alt={publicEvents[0].title} className="w-full h-full object-cover opacity-70 group-hover:scale-105 transition duration-700" 
+                                onError={(e) => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1540039155733-d7696d4eb98e?w=1600'; }}
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/40 to-transparent"></div>
+                            <div className="absolute inset-0 bg-gradient-to-r from-[#050505]/60 to-transparent"></div>
+                            
+                            <div className="absolute bottom-0 left-0 p-8 md:p-12 w-full flex flex-col md:flex-row justify-between md:items-end gap-8 pointer-events-none">
+                                <div className="pointer-events-auto max-w-2xl">
+                                    <span className="px-3 py-1.5 text-[10px] font-bold bg-white text-black rounded uppercase tracking-widest mb-5 inline-block shadow-lg">Trending Now</span>
+                                    <h3 className="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight mb-4 group-hover:text-[#e8ff47] transition">{publicEvents[0].title}</h3>
+                                    <p className="text-slate-300 flex items-center gap-2 font-medium text-lg">
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg> 
+                                        {publicEvents[0].venue}
+                                    </p>
+                                </div>
+                                <div className="pointer-events-auto shrink-0">
+                                    <Link 
+                                        href={isAdmin ? route('admin.dashboard') : route('checkout.index', { event_id: publicEvents[0].id })}
+                                        className="relative z-20 bg-[#e8ff47] text-black px-10 py-4 rounded-xl font-bold text-sm hover:bg-white transition-all shadow-[0_0_30px_rgba(232,255,71,0.2)] text-center block"
+                                    >
+                                        {isAdmin ? 'Manage Event' : 'Buy Tickets'}
+                                    </Link>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="h-64 rounded-[2rem] border border-dashed border-slate-800 flex items-center justify-center text-slate-500 font-bold uppercase tracking-widest text-sm">
+                            No Featured Event Available
+                        </div>
+                    )}
+                </div>
+
+                {/* Interactive Category Filter */}
+                <div className="flex items-center gap-4 mb-10 overflow-x-auto pb-4 scrollbar-hide">
+                    {categories.map((cat) => (
+                        <button key={cat} onClick={() => setActiveCategory(cat)} className={`px-5 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition border ${activeCategory === cat ? 'bg-white text-black border-white' : 'bg-transparent text-slate-400 border-slate-800 hover:border-slate-600 hover:text-white'}`}>
+                            {cat}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Event Grid Index */}
+                <h2 className="text-2xl font-black text-white tracking-tight mb-8">Upcoming Near You</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {publicEvents.map((event) => (
-                        <div key={event.id} className="group relative bg-[#111] rounded-2xl border border-white/5 overflow-hidden hover:border-[#e8ff47]/30 transition-all flex flex-col h-full shadow-2xl">
-                            {/* Image Container */}
-                            <div className="aspect-[4/3] relative overflow-hidden bg-[#0a0a0a]">
-                                <img 
-                                    src={event.image} 
-                                    alt={event.title} 
-                                    className="w-full h-full object-cover opacity-80 group-hover:scale-110 group-hover:opacity-100 transition-all duration-500" 
+                        <div key={event.id} className="bg-[#0a0a0a] rounded-2xl overflow-hidden border border-slate-800/80 hover:border-slate-600 transition-all duration-300 group flex flex-col shadow-lg hover:shadow-[0_0_30px_rgba(255,255,255,0.03)]">
+                            
+                            {/* Card Media Header */}
+                            <div className="relative aspect-[4/3] overflow-hidden bg-[#111]">
+                                <img src={getImageUrl(event.image || event.BannerImage)} alt={event.title} className="w-full h-full object-cover opacity-80 group-hover:scale-105 group-hover:opacity-100 transition duration-500" 
+                                     onError={(e) => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800'; }}
                                 />
-                                <span className="absolute top-3 left-3 px-2 py-1 bg-[#050505]/90 backdrop-blur-md rounded text-[9px] font-black text-[#e8ff47] uppercase tracking-widest border border-[#e8ff47]/20">
-                                    {event.tag}
-                                </span>
+                                <div className="absolute top-4 left-4">
+                                    <span className="px-3 py-1.5 text-[10px] font-bold bg-black/60 backdrop-blur-md border border-white/10 text-white rounded uppercase tracking-widest">
+                                        {event.tag || 'Music'}
+                                    </span>
+                                </div>
                             </div>
 
-                            {/* Content Container */}
-                            <div className="p-5 flex flex-col flex-1 justify-between gap-4">
+                            {/* Card Body Content */}
+                            <div className="p-6 flex-1 flex flex-col justify-between">
                                 <div>
-                                    <h3 className="text-sm font-bold text-white mb-2 line-clamp-2 group-hover:text-[#e8ff47] transition-colors">{event.title}</h3>
-                                    <div className="flex flex-col gap-1">
-                                        <p className="text-[10px] text-gray-500 uppercase flex items-center gap-1 font-bold">
-                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                            {event.date}
+                                    <h3 className="text-xl font-bold text-white leading-tight mb-4 group-hover:text-[#e8ff47] transition line-clamp-2">{event.title}</h3>
+                                    
+                                    <div className="space-y-3 mb-6">
+                                        <p className="text-sm text-slate-400 flex items-center gap-2.5 font-medium">
+                                            <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg> 
+                                            {new Date(event.date || event.EventDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
                                         </p>
-                                        <p className="text-[10px] text-gray-500 uppercase flex items-center gap-1">
-                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                        <p className="text-sm text-slate-400 flex items-center gap-2.5 font-medium">
+                                            <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg> 
                                             {event.venue}
                                         </p>
                                     </div>
                                 </div>
 
-                                <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                                {/* Card Footer Actions */}
+                                <div className="border-t border-slate-800/80 pt-5 flex items-center justify-between mt-auto">
                                     <div>
-                                        <p className="text-[9px] text-gray-500 uppercase font-black">Price</p>
-                                        <p className="text-sm font-black text-white">{event.price}</p>
+                                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">Price</p>
+                                        {/* [UI/UX] Price Formatting Logic
+                                            Directly renders the string from the database (e.g., 'Mulai Rp 15.000').
+                                            Bypasses Number() conversion to prevent 'NaN' errors. 
+                                        */}
+                                        <p className="text-[#e8ff47] font-mono font-bold text-sm">
+                                            {event.price || event.Price || 'Check Detail'}
+                                        </p>
                                     </div>
-                                    
-                                    {/* TOMBOL DINAMIS */}
+
                                     <Link 
-                                        href={isAdmin ? route('admin.dashboard') : route('checkout.index', event.id)}
-                                        className={`px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                                        href={isAdmin ? route('admin.dashboard') : route('checkout.index', { event_id: event.id || event.ID })}
+                                        className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${
                                             isAdmin 
-                                            ? 'bg-white/5 text-gray-400 border border-white/10 hover:text-[#e8ff47] hover:border-[#e8ff47] hover:bg-[#e8ff47]/10' 
-                                            : 'bg-[#e8ff47] text-black hover:bg-white hover:scale-105 shadow-[0_0_15px_rgba(232,255,71,0.2)]'
+                                            ? 'bg-[#151515] text-slate-300 border border-slate-700 hover:text-white hover:bg-slate-800' 
+                                            : 'bg-white/5 text-white border border-white/10 hover:bg-white hover:text-black hover:border-white'
                                         }`}
                                     >
                                         {isAdmin ? 'Manage' : 'Get Tickets'}
@@ -127,7 +276,56 @@ export default function WelcomePublic({ publicEvents = [] }) {
                         </div>
                     ))}
                 </div>
-            </section>
+            </main>
+
+            {/* =========================================
+                5. GLOBAL FOOTER
+            ========================================== */}
+            <footer className="border-t border-white/5 bg-[#020202] pt-20 pb-10 px-6 mt-12">
+                <div className="max-w-[1200px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
+                    <div className="md:col-span-1">
+                        <div className="flex items-center gap-2 mb-6">
+                            <img src="/images/logo.png" alt="Eventix Logo" className="h-6 w-auto grayscale opacity-80" onError={(e) => e.target.style.display = 'none'} />
+                            <h4 className="text-xl font-black tracking-tighter text-white">EVEN<span className="text-[#e8ff47]">TIX</span></h4>
+                        </div>
+                        <p className="text-sm text-slate-500 leading-relaxed mb-6 font-medium pr-4">The most secure and reliable platform for concert and live event reservations in Indonesia.</p>
+                        <div className="flex gap-2">
+                            <span className="px-3 py-1 bg-slate-900 rounded border border-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-400">QRIS</span>
+                            <span className="px-3 py-1 bg-slate-900 rounded border border-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-400">VISA</span>
+                        </div>
+                    </div>
+                    <div>
+                        <h5 className="text-sm font-bold text-white mb-6">Company</h5>
+                        <ul className="space-y-4 text-sm text-slate-400 font-medium">
+                            <li><a href="#" className="hover:text-white transition-colors">About Us</a></li>
+                            <li><a href="#" className="hover:text-white transition-colors">Careers</a></li>
+                            <li><a href="#" className="hover:text-white transition-colors">Partnerships</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h5 className="text-sm font-bold text-white mb-6">Support</h5>
+                        <ul className="space-y-4 text-sm text-slate-400 font-medium">
+                            <li><a href="#" className="hover:text-white transition-colors">Help Center</a></li>
+                            <li><a href="#" className="hover:text-white transition-colors">Refund Policy</a></li>
+                            <li><a href="#" className="hover:text-white transition-colors">Contact Us</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h5 className="text-sm font-bold text-white mb-6">Legal</h5>
+                        <ul className="space-y-4 text-sm text-slate-400 font-medium">
+                            <li><a href="#" className="hover:text-white transition-colors">Terms of Service</a></li>
+                            <li><a href="#" className="hover:text-white transition-colors">Privacy Policy</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div className="max-w-[1200px] mx-auto border-t border-slate-800/80 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-sm font-medium text-slate-500">
+                    <p>© 2026 Eventix Live. All Rights Reserved.</p>
+                    <div className="flex gap-8">
+                        <a href="#" className="hover:text-white transition-colors">Instagram</a>
+                        <a href="#" className="hover:text-white transition-colors">X / Twitter</a>
+                    </div>
+                </div>
+            </footer>
         </div>
     );
 }
