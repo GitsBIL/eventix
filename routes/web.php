@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\MidtransLogController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use App\Http\Controllers\Admin\ReportController;
 
 // Route Halaman Utama (Public)
 Route::get('/', function () {
@@ -47,7 +48,7 @@ Route::get('auth/google', [GoogleController::class, 'redirect'])->name('google.r
 Route::get('auth/google/callback', [GoogleController::class, 'callback'])->name('google.callback');
 
 // ==================================================
-// AREA USER (CUSTOMER) - Middleware 'verified' dihapus
+// AREA USER (CUSTOMER)
 // ==================================================
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', function () {
@@ -81,34 +82,35 @@ Route::middleware(['auth'])->group(function () {
 });
 
 // ==================================================
-// AREA ADMIN - Middleware 'verified' juga dihapus
+// AREA ADMIN
 // ==================================================
 Route::middleware(['auth', '2fa_check'])->group(function () {
     
     Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
     Route::get('/admin/analytics', [AnalyticsController::class, 'index'])->name('admin.analytics');
     
-    // MASTER EVENT ROUTE (Secara otomatis ngebikin route admin.events.show)
+    // RUTE REPORTS & EXPORT MASTER
+    Route::get('/admin/reports', [ReportController::class, 'index'])->name('admin.reports.index');
+    Route::get('/admin/reports/export', [ReportController::class, 'exportCsv'])->name('admin.reports.export');
+    Route::get('/admin/export-data', [ReportController::class, 'exportIndex'])->name('admin.export.index');
+    Route::get('/admin/export-data/download', [ReportController::class, 'exportProcess'])->name('admin.export.download');
+
+    // MASTER EVENT ROUTE
     Route::resource('admin/events', EventController::class)->names('admin.events');
     
-    // =========================================================================
-    // SIHIR ARSITEKTUR TAHAP 1: NESTED ROUTES KHUSUS MANAGEMENT DALAM EVENT
-    // =========================================================================
+    // NESTED ROUTES KHUSUS MANAGEMENT DALAM EVENT
     Route::prefix('admin/events/{event_id}')->name('admin.events.')->group(function () {
         Route::get('/categories', [CategoryController::class, 'eventCategories'])->name('categories');
         Route::get('/tickets', [TicketController::class, 'eventTickets'])->name('tickets');
     });
 
-    // (Rute lama dibiarin dulu biar gak ada yang error/crash mendadak)
     Route::resource('admin/tickets', TicketController::class)->names('admin.tickets');
     Route::resource('admin/categories', CategoryController::class)->names('admin.categories');
 
     Route::get('/admin/transactions', [TransactionController::class, 'index'])->name('admin.transactions.index');
     Route::get('/admin/refunds', [RefundController::class, 'index'])->name('admin.refunds.index');
     
-    // Tambahan Rute Midtrans Logs
     Route::get('/admin/midtrans-logs', [MidtransLogController::class, 'index'])->name('admin.midtrans-logs.index');
-    
     Route::get('/admin/customers', [CustomerController::class, 'index'])->name('admin.customers.index');
 });
 
