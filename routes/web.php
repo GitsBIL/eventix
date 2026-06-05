@@ -137,4 +137,9 @@ Route::middleware(['auth', '2fa_check'])->group(function () {
 Route::get('/2fa/challenge', [TwoFactorController::class, 'challenge'])->name('2fa.challenge')->middleware('auth');
 Route::post('/2fa/challenge', [TwoFactorController::class, 'authenticate'])->middleware('auth');
 
+Route::get('/bersihin-cache-rahasia', function() {
+    \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+    return 'Cache Berhasil Dibersihkan Cuy!';
+});
+
 require __DIR__.'/auth.php';
