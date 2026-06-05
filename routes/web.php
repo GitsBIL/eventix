@@ -60,18 +60,38 @@ Route::middleware(['auth'])->group(function () {
     })->name('dashboard');
 
     Route::get('/customer/dashboard', function () {
-        $myTickets = \App\Models\Order::where('CustomerID', Auth::user()->ID)
+        $userId = Auth::user()->ID;
+
+        $myTickets = \Illuminate\Support\Facades\DB::table('orders')
             ->join('order_items', 'orders.ID', '=', 'order_items.OrderID')
             ->join('ticket_categories', 'order_items.TicketCategoryID', '=', 'ticket_categories.ID')
             ->join('events', 'ticket_categories.EventID', '=', 'events.ID')
-            ->select('orders.OrderNo', 'orders.TotalAmount', 'orders.PaymentStatus','orders.CreatedDate','events.EventName','events.Location','ticket_categories.CategoryName','order_items.Qty')
-            ->orderBy('orders.CreatedDate', 'desc')->get();
+            ->where('orders.CustomerID', $userId)
+            ->select(
+                'orders.ID', 'orders.OrderNo', 'orders.TotalAmount', 'orders.PaymentStatus', 'orders.CreatedDate', 
+                'events.ID as EventID', 'events.EventName', 'events.Location', 'events.EventDate', 'events.BannerImage', 
+                'ticket_categories.CategoryName', 'order_items.Qty'
+            )
+            ->orderBy('orders.CreatedDate', 'desc')
+            ->get();
 
-        return Inertia::render('Customer/Dashboard', ['tickets' => $myTickets]); 
+        $recommendedEvents = \App\Models\Event::where('IsDeleted', 0)
+            ->whereDate('EventDate', '>=', now()->toDateString())
+            ->orderBy('EventDate', 'asc')
+            ->limit(3)
+            ->get();
+
+        return Inertia::render('Customer/Dashboard', [
+            'tickets' => $myTickets,
+            'recommendedEvents' => $recommendedEvents
+        ]); 
     })->name('customer.dashboard');
 
     Route::get('/checkout/{event_id}', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout/{event_id}', [CheckoutController::class, 'store'])->name('checkout.store');
+    
+    // INI DIA RUTE BARU BUAT BYPASS MIDTRANS POPUP!
+    Route::get('/checkout/repay/{orderNo}', [CheckoutController::class, 'repayToken'])->name('checkout.repay');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

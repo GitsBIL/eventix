@@ -17,12 +17,11 @@ class CheckoutController extends Controller
     public function index($event_id)
     {
         $event = Event::findOrFail($event_id);
-        // UBAH: Sekarang pakai get() untuk ngambil SEMUA tiket yang aktif
         $tickets = TicketCategory::where('EventID', $event_id)->where('Status', 1)->orderBy('Price', 'asc')->get();
 
         return Inertia::render('Checkout/Index', [
             'event' => $event,
-            'tickets' => $tickets // Kirim daftar tiket ke frontend
+            'tickets' => $tickets 
         ]);
     }
 
@@ -39,13 +38,11 @@ class CheckoutController extends Controller
             CURLOPT_HTTPHEADER => [],
         ];
 
-        // TANGKAP TIKET & QUANTITY DARI FRONTEND
         $ticketId = $request->input('ticket_id');
-        $quantity = (int) $request->input('quantity', 1); // Default 1 kalau kosong
+        $quantity = (int) $request->input('quantity', 1); 
         
         $ticket = TicketCategory::where('EventID', $event_id)->where('ID', $ticketId)->first();
         
-        // KALIKAN HARGA DENGAN JUMLAH TIKET
         $grossAmount = (int) $ticket->Price * $quantity; 
         $orderNo = 'EVTX-' . date('Ymd') . '-' . strtoupper(Str::random(5));
 
@@ -62,8 +59,8 @@ class CheckoutController extends Controller
         DB::table('order_items')->insert([
             'OrderID' => $orderId,
             'TicketCategoryID' => $ticket->ID,
-            'Qty' => $quantity, // MASUKIN QUANTITY KE DATABASE
-            'SubTotal' => $grossAmount, // SUBTOTAL HASIL KALI
+            'Qty' => $quantity, 
+            'SubTotal' => $grossAmount, 
             'CreatedBy' => Auth::user()->FullName,
             'CreatedDate' => now()
         ]);
@@ -90,6 +87,57 @@ class CheckoutController extends Controller
                 'status' => 'error', 
                 'message' => $e->getMessage()
             ], 500);
+        }
+    }
+
+    // ==============================================================
+    // FUNGSI BARU: Ngebangkitin Token Pembayaran buat "Pay Now" Dashboard
+    // ==============================================================
+    public function repayToken($orderNo)
+    {
+        $order = DB::table('orders')
+            ->where('OrderNo', $orderNo)
+            ->where('CustomerID', Auth::id())
+            ->first();
+
+        if (!$order) {
+            return response()->json(['status' => 'error', 'message' => 'Order tidak ditemukan!'], 404);
+        }
+
+        // Trik Jitu: Tambahin Timestamp di ujung OrderNo biar Midtrans gak marah (Duplicate Order ID)
+        $newOrderNo = $order->OrderNo . '-' . time();
+        DB::table('orders')->where('ID', $order->ID)->update(['OrderNo' => $newOrderNo]);
+
+        Config::$serverKey = env('MIDTRANS_SERVER_KEY');
+        Config::$isProduction = env('MIDTRANS_IS_PRODUCTION', false);
+        Config::$isSanitized = env('MIDTRANS_IS_SANITIZED', true);
+        Config::$is3ds = env('MIDTRANS_IS_3DS', true);
+        Config::$curlOptions = [
+            CURLOPT_SSL_VERIFYHOST => 0,
+            CURLOPT_SSL_VERIFYPEER => 0,
+            CURLOPT_HTTPHEADER => [],
+        ];
+
+        $params = [
+            'transaction_details' => [
+                'order_id' => $newOrderNo,
+                'gross_amount' => (int) $order->TotalAmount,
+            ],
+            'customer_details' => [
+                'first_name' => Auth::user()->FullName,
+                'email' => Auth::user()->email,
+            ],
+        ];
+
+        try {
+            $snapToken = Snap::getSnapToken($params);
+            return response()->json([
+                'status' => 'success',
+                'snap_token' => $snapToken,
+                'client_key' => env('MIDTRANS_CLIENT_KEY') 
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
         }
     }
 }

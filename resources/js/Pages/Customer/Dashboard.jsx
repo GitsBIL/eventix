@@ -1,102 +1,107 @@
+import React from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, usePage, Link } from '@inertiajs/react';
+import TicketCard from './TicketCard';
 
 export default function CustomerDashboard() {
-    // Tangkap data 'tickets' yang dikirim dari web.php
-    const { auth, tickets = [] } = usePage().props;
+    const { auth, tickets = [], recommendedEvents = [] } = usePage().props;
 
-    // Kalkulasi otomatis untuk angka di atas (Stats)
-    const totalEvents = tickets.length;
-    const totalTickets = tickets.reduce((sum, ticket) => sum + ticket.Qty, 0);
+    // Logika Tanggal
+    const parseDate = (dateStr) => {
+        if (!dateStr) return new Date('2000-01-01'); 
+        return new Date(dateStr.replace(/-/g, '/')); 
+    };
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Pisah berdasarkan EventDate yang udah ditarik dari web.php
+    const upcomingTickets = tickets.filter(t => parseDate(t.EventDate) >= today);
+    const pastTickets = tickets.filter(t => parseDate(t.EventDate) < today);
+
+    // Helper Gambar
+    const getImageUrl = (rawPath) => {
+        if (!rawPath) return 'https://images.unsplash.com/photo-1540039155733-d7696d4eb98e?w=1600';
+        if (rawPath.startsWith('http')) return rawPath;
+        if (rawPath.startsWith('/storage/')) return rawPath;
+        if (rawPath.startsWith('storage/')) return `/${rawPath}`;
+        return `/storage/${rawPath}`;
+    };
 
     return (
-        <AuthenticatedLayout
-            user={auth.user}
-            header={<h2 className="font-semibold text-xl text-[#e8ff47] leading-tight">Motto</h2>}
-        >
-            <Head title="Customer Dashboard" />
+        <AuthenticatedLayout user={auth.user}>
+            <Head title="My Tickets | Eventix" />
 
-            <div className="py-12 bg-[#0a0a0a] min-h-screen selection:bg-[#e8ff47] selection:text-black">
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8">
-                    
-                    {/* Welcome Banner + Browse Events Button */}
-                    <div className="bg-gradient-to-r from-[#111111] to-[#0d0d0d] overflow-hidden shadow-2xl sm:rounded-2xl border border-white/5">
-                        <div className="p-8 md:p-10 text-gray-300 flex flex-col md:flex-row justify-between items-center gap-6">
-                            <div className="text-center md:text-left">
-                                <h3 className="text-2xl font-black mb-2 uppercase tracking-tighter">
-                                    Halo, <span className="text-[#e8ff47]">{auth.user?.FullName || 'User'}</span>! 👋
-                                </h3>
-                                <p className="text-sm font-medium text-gray-500 uppercase tracking-widest leading-relaxed max-w-xl">
-                                    Selamat datang di sistem tiket <span className="font-bold text-white">EVENTIX</span>. Amankan tiket konser impianmu sekarang!
-                                </p>
+            <div className="pb-12 bg-[#050505] min-h-screen">
+                <div className="max-w-[900px] mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+
+                    <div className="text-center md:text-left border-b border-white/5 pb-8 pt-4">
+                        <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight mb-2">MY TICKETS</h1>
+                        <p className="text-slate-400 text-sm font-medium">All your upcoming events and past memories in one place.</p>
+                        <div className="flex items-center justify-center md:justify-start gap-4 mt-6">
+                            <span className="text-xs text-slate-300 font-bold px-3 py-1.5 bg-[#111] rounded-lg border border-[#222]">
+                                <span className="text-[#e8ff47] mr-1.5">{upcomingTickets.length}</span> Upcoming Events
+                            </span>
+                            <span className="text-xs text-slate-300 font-bold px-3 py-1.5 bg-[#111] rounded-lg border border-[#222]">
+                                <span className="text-white mr-1.5">{pastTickets.length}</span> Past Events
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* UPCOMING */}
+                    <div>
+                        <h2 className="text-xl font-bold text-white tracking-tight mb-6 flex items-center gap-2">
+                            Upcoming Events <span className="w-2 h-2 rounded-full bg-[#e8ff47] animate-pulse"></span>
+                        </h2>
+                        {upcomingTickets.length > 0 ? (
+                            <div className="space-y-4">
+                                {upcomingTickets.map((ticket, index) => (
+                                    <TicketCard key={index} ticket={ticket} customerName={auth.user?.FullName} isPast={false} />
+                                ))}
                             </div>
-                            <Link 
-                                href={route('home')} 
-                                className="shrink-0 px-8 py-4 bg-[#e8ff47] text-black font-black rounded-xl text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-[0_10px_20px_rgba(232,255,71,0.2)]"
-                            >
-                                Browse More Events
-                            </Link>
-                        </div>
+                        ) : (
+                            <div className="bg-[#0a0a0a] py-12 rounded-xl text-center border border-white/5">
+                                <p className="text-sm text-slate-500 font-medium mb-4">No upcoming events right now.</p>
+                                <Link href="/#events" className="text-xs font-bold bg-white text-black px-5 py-2.5 rounded-full hover:bg-[#e8ff47] transition">Find Events</Link>
+                            </div>
+                        )}
                     </div>
 
-                    {/* Stats Grid Dinamis */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div className="bg-[#111] p-8 rounded-2xl border border-white/5 hover:border-[#e8ff47]/20 transition-all">
-                            <p className="text-[10px] font-bold text-gray-600 uppercase tracking-widest mb-2">My Upcoming Events</p>
-                            <p className="text-5xl font-black text-[#e8ff47]">{totalEvents}</p>
-                            <p className="text-xs text-gray-500 mt-1">Concerts/Festivals</p>
-                        </div>
-                        <div className="bg-[#111] p-8 rounded-2xl border border-white/5 hover:border-[#e8ff47]/20 transition-all">
-                            <p className="text-[10px] font-bold text-gray-600 uppercase tracking-widest mb-2">My Ticket Wallet</p>
-                            <p className="text-5xl font-black text-[#e8ff47]">{totalTickets}</p>
-                            <p className="text-xs text-gray-500 mt-1">Active Tickets</p>
-                        </div>
-                    </div>
-
-                    {/* Logika Kondisi: Tampilkan Riwayat Tiket ATAU Pesan Kosong */}
-                    {tickets.length > 0 ? (
-                        <div className="space-y-4">
-                            <h4 className="text-lg font-bold text-white uppercase tracking-widest mb-4">Riwayat Pesanan</h4>
-                            {tickets.map((ticket, index) => (
-                                <div key={index} className="bg-[#111] p-6 rounded-2xl border border-white/5 hover:border-[#e8ff47]/30 transition-all flex flex-col md:flex-row justify-between gap-6 md:items-center">
-                                    <div>
-                                        <h4 className="text-xl font-bold text-white mb-1">{ticket.EventName}</h4>
-                                        <p className="text-sm text-gray-400 mb-2 font-medium">
-                                            {ticket.Location} • <span className="text-[#e8ff47]">{ticket.CategoryName}</span> (x{ticket.Qty})
-                                        </p>
-                                        <p className="text-xs font-mono text-gray-600">INVOICE: {ticket.OrderNo}</p>
-                                    </div>
-                                    <div className="text-left md:text-right flex flex-col justify-center">
-                                        <p className="text-2xl font-black text-white mb-2">
-                                            Rp {Number(ticket.TotalAmount).toLocaleString()}
-                                        </p>
-                                        <div>
-                                            {/* Status Badge Dinamis */}
-                                            <span className={`inline-block px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-widest ${
-                                                ticket.PaymentStatus === 'pending_payment' 
-                                                ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20' 
-                                                : 'bg-green-500/10 text-green-400 border border-green-500/20'
-                                            }`}>
-                                                {ticket.PaymentStatus.replace('_', ' ')}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        /* No Tickets Section (Tampil kalau data kosong) */
-                        <div className="bg-[#111] p-12 rounded-3xl text-center border border-white/5 space-y-6">
-                            <span className="text-7xl">🎟️</span>
-                            <h4 className="text-xl font-bold text-white uppercase tracking-tight">Belum Ada Tiket yang Dibeli</h4>
-                            <p className="text-sm text-gray-600 font-medium max-w-md mx-auto leading-relaxed">
-                                Cari konser atau festival favoritmu sekarang dan rasakan pengalaman "War" tiket yang seru & aman!
-                            </p>
-                            <Link href={route('home')} className="inline-block px-8 py-3 bg-white/5 border border-white/10 rounded-xl text-xs font-black uppercase tracking-widest text-white hover:bg-[#e8ff47] hover:text-black transition-all">
-                                Cari Event
-                            </Link>
+                    {/* PAST */}
+                    {pastTickets.length > 0 && (
+                        <div className="pt-8">
+                            <h2 className="text-xl font-bold text-white tracking-tight mb-6 text-opacity-70">Past Events</h2>
+                            <div className="space-y-4 opacity-70 hover:opacity-100 transition-opacity duration-300">
+                                {pastTickets.map((ticket, index) => (
+                                    <TicketCard key={index} ticket={ticket} customerName={auth.user?.FullName} isPast={true} />
+                                ))}
+                            </div>
                         </div>
                     )}
+
+                    {/* RECOMMENDED */}
+                    <div className="pt-12">
+                        <div className="flex items-center justify-between mb-6">
+                            <h4 className="text-lg font-bold text-white tracking-tight">Recommended for you</h4>
+                            <Link href="/#events" className="text-sm text-slate-400 hover:text-white transition-colors">See all</Link>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                            {recommendedEvents.length > 0 ? recommendedEvents.map((event) => (
+                                <Link key={event.ID} href={route('checkout.index', { event_id: event.ID })} className="bg-[#0a0a0a] border border-white/5 rounded-xl overflow-hidden hover:border-white/10 transition-colors group p-4 flex gap-4">
+                                    <div className="w-16 h-16 rounded-lg bg-[#111] shrink-0 border border-white/5 overflow-hidden relative">
+                                        <img src={getImageUrl(event.BannerImage)} alt={event.EventName} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                                    </div>
+                                    <div className="flex flex-col justify-center">
+                                        <h5 className="font-bold text-sm text-white mb-1 line-clamp-1">{event.EventName}</h5>
+                                        <p className="text-[10px] text-slate-500">{new Date(event.EventDate?.replace(/-/g, '/')).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} • {event.Location}</p>
+                                    </div>
+                                </Link>
+                            )) : (
+                                <p className="text-sm text-slate-500">More events coming soon!</p>
+                            )}
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </AuthenticatedLayout>

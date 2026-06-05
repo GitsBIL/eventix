@@ -137,17 +137,17 @@ export default function Reports({ auth, metrics, transactions }) {
                             </select>
                         </div>
                         
-                        {/* Tombol Export */}
+                        {/* Tombol Export (Teks udah diganti jadi Export Excel) */}
                         <a 
                             href={route('admin.reports.export')}
                             className="flex items-center justify-center w-full md:w-auto gap-2 bg-white hover:bg-gray-100 text-[#0f172a] text-sm font-bold py-2 px-4 rounded-lg transition-colors shadow-sm"
                         >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                            Export CSV
+                            Export Excel
                         </a>
                     </div>
 
-                    {/* Tabel Data (Anchor Visual Kiri, Angka Kanan) */}
+                    {/* Tabel Data */}
                     <div className="overflow-x-auto">
                         <table className="min-w-full divide-y divide-[#1e293b]">
                             <thead className="bg-[#0a0f1d]">
@@ -169,7 +169,7 @@ export default function Reports({ auth, metrics, transactions }) {
                                                 <div className="text-xs text-slate-500">{new Date(trx.CreatedDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
                                             </td>
                                             
-                                            {/* Column 2: Customer & Event (Visual Anchor) */}
+                                            {/* Column 2: Customer & Event */}
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 font-bold text-xs border border-slate-700">
@@ -182,27 +182,27 @@ export default function Reports({ auth, metrics, transactions }) {
                                                 </div>
                                             </td>
                                             
-                                            {/* Column 3: Quantity (Format Benar) */}
+                                            {/* Column 3: Quantity */}
                                             <td className="px-6 py-4 whitespace-nowrap text-center">
                                                 <span className="inline-flex items-center justify-center bg-slate-800/50 text-slate-300 text-xs font-bold px-2.5 py-1 rounded-md border border-slate-700/50">
                                                     {trx.TotalQty || Math.floor(Math.random() * 3) + 1} Tickets
                                                 </span>
                                             </td>
                                             
-                                            {/* Column 4: Amount (Align Right) */}
+                                            {/* Column 4: Amount */}
                                             <td className="px-6 py-4 whitespace-nowrap text-right">
                                                 <div className="text-sm font-bold text-emerald-400">{formatRupiah(trx.TotalAmount)}</div>
                                                 <div className="text-[10px] text-slate-500 font-medium">via Midtrans</div>
                                             </td>
                                             
-                                            {/* Column 5: Status Badge (Align Right) */}
+                                            {/* Column 5: Status Badge */}
                                             <td className="px-6 py-4 whitespace-nowrap text-right">
                                                 {renderBadge(trx.PaymentStatus)}
                                             </td>
                                         </tr>
                                     ))
                                 ) : (
-                                    /* EMPTY STATE YANG "REAL" */
+                                    /* EMPTY STATE */
                                     <tr>
                                         <td colSpan="5" className="px-6 py-16">
                                             <div className="flex flex-col items-center justify-center text-center">
