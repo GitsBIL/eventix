@@ -1,12 +1,13 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, usePage, Link } from '@inertiajs/react';
 import TicketCard from './TicketCard';
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
 
 export default function CustomerDashboard() {
     const { auth, tickets = [], recommendedEvents = [] } = usePage().props;
 
-    // Logika Tanggal
     const parseDate = (dateStr) => {
         if (!dateStr) return new Date('2000-01-01'); 
         return new Date(dateStr.replace(/-/g, '/')); 
@@ -15,11 +16,9 @@ export default function CustomerDashboard() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    // Pisah berdasarkan EventDate yang udah ditarik dari web.php
     const upcomingTickets = tickets.filter(t => parseDate(t.EventDate) >= today);
     const pastTickets = tickets.filter(t => parseDate(t.EventDate) < today);
 
-    // Helper Gambar
     const getImageUrl = (rawPath) => {
         if (!rawPath) return 'https://images.unsplash.com/photo-1540039155733-d7696d4eb98e?w=1600';
         if (rawPath.startsWith('http')) return rawPath;
@@ -27,6 +26,55 @@ export default function CustomerDashboard() {
         if (rawPath.startsWith('storage/')) return `/${rawPath}`;
         return `/storage/${rawPath}`;
     };
+
+    const startManualBookTour = () => {
+        const driverObj = driver({
+            showProgress: true,
+            animate: true,
+            doneBtnText: 'Selesai',
+            nextBtnText: 'Lanjut →',
+            prevBtnText: '← Kembali',
+            steps: [
+                {
+                    popover: {
+                        title: '👋 Selamat Datang di Manual Book Eventix!',
+                        description: 'Ini adalah panduan interaktif. Mari kita lihat cara melakukan pembayaran dan melihat tiket kamu secara langsung.',
+                    }
+                },
+                {
+                    element: '.tour-pay-btn',
+                    popover: {
+                        title: '💳 Tombol Pembayaran',
+                        description: 'Jika status tiket kamu <b>PENDING</b>, klik tombol ini untuk membuka pop-up sistem pembayaran aman dari Midtrans.',
+                        side: "left", 
+                        align: 'start'
+                    }
+                },
+                {
+                    element: '.tour-view-btn',
+                    popover: {
+                        title: '📱 E-Ticket & QR Code',
+                        description: 'Jika sudah lunas, tombol akan berubah. Klik untuk melihat <b>QR Code</b> yang akan di-scan saat masuk ke acara.',
+                        side: "left", 
+                        align: 'start'
+                    }
+                }
+            ]
+        });
+        driverObj.drive();
+    };
+
+    // MATIIN TOUR TOTAL DI AKHIR ESTAFET
+    useEffect(() => {
+        if (localStorage.getItem('tour_step') === 'dashboard') {
+            localStorage.removeItem('tour_step'); 
+            localStorage.removeItem('is_tour_active'); 
+            
+            setTimeout(() => {
+                startManualBookTour();
+            }, 1000); 
+        }
+    }, []);
 
     return (
         <AuthenticatedLayout user={auth.user}>
@@ -38,7 +86,8 @@ export default function CustomerDashboard() {
                     <div className="text-center md:text-left border-b border-white/5 pb-8 pt-4">
                         <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight mb-2">MY TICKETS</h1>
                         <p className="text-slate-400 text-sm font-medium">All your upcoming events and past memories in one place.</p>
-                        <div className="flex items-center justify-center md:justify-start gap-4 mt-6">
+                        
+                        <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mt-6">
                             <span className="text-xs text-slate-300 font-bold px-3 py-1.5 bg-[#111] rounded-lg border border-[#222]">
                                 <span className="text-[#e8ff47] mr-1.5">{upcomingTickets.length}</span> Upcoming Events
                             </span>
@@ -48,7 +97,6 @@ export default function CustomerDashboard() {
                         </div>
                     </div>
 
-                    {/* UPCOMING */}
                     <div>
                         <h2 className="text-xl font-bold text-white tracking-tight mb-6 flex items-center gap-2">
                             Upcoming Events <span className="w-2 h-2 rounded-full bg-[#e8ff47] animate-pulse"></span>
@@ -67,7 +115,6 @@ export default function CustomerDashboard() {
                         )}
                     </div>
 
-                    {/* PAST */}
                     {pastTickets.length > 0 && (
                         <div className="pt-8">
                             <h2 className="text-xl font-bold text-white tracking-tight mb-6 text-opacity-70">Past Events</h2>
@@ -79,7 +126,6 @@ export default function CustomerDashboard() {
                         </div>
                     )}
 
-                    {/* RECOMMENDED */}
                     <div className="pt-12">
                         <div className="flex items-center justify-between mb-6">
                             <h4 className="text-lg font-bold text-white tracking-tight">Recommended for you</h4>

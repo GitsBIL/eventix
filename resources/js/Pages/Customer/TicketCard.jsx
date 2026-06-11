@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 export default function TicketCard({ ticket, customerName, isPast }) {
     const [showQR, setShowQR] = useState(false);
-    const [isProcessing, setIsProcessing] = useState(false); // State biar tombol ada efek loadingnya
+    const [isProcessing, setIsProcessing] = useState(false);
 
     const formatRupiah = (number) => {
         return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
@@ -66,14 +66,12 @@ export default function TicketCard({ ticket, customerName, isPast }) {
     const handlePayNow = async () => {
         setIsProcessing(true);
         try {
-            // Nembak ke rute baru yang kita bikin di web.php
             const res = await fetch(`/checkout/repay/${ticket.OrderNo}`);
             const data = await res.json();
             
             if (data.status === 'success') {
                 const scriptUrl = "https://app.sandbox.midtrans.com/snap/snap.js";
                 
-                // Load script Midtrans kalau belum ada
                 const loadMidtrans = new Promise((resolve) => {
                     if (document.querySelector(`script[src="${scriptUrl}"]`)) {
                         resolve();
@@ -88,7 +86,6 @@ export default function TicketCard({ ticket, customerName, isPast }) {
 
                 await loadMidtrans;
                 
-                // Eksekusi Buka Popup Midtrans
                 window.snap.pay(data.snap_token, {
                     onSuccess: function(result){ window.location.reload(); },
                     onPending: function(result){ window.location.reload(); },
@@ -158,15 +155,14 @@ export default function TicketCard({ ticket, customerName, isPast }) {
                     </div>
 
                     {rawStatus === 'paid' ? (
-                        <button onClick={() => setShowQR(true)} className="px-5 py-2 w-auto md:w-full bg-transparent border border-white/20 hover:border-white text-white text-[11px] font-bold rounded-lg transition-colors flex items-center justify-center gap-1.5">
+                        <button onClick={() => setShowQR(true)} className="tour-view-btn px-5 py-2 w-auto md:w-full bg-transparent border border-white/20 hover:border-white text-white text-[11px] font-bold rounded-lg transition-colors flex items-center justify-center gap-1.5">
                             View Ticket <span className="text-[#e8ff47]">&rarr;</span>
                         </button>
                     ) : (
-                        // Tombol Ajaibnya di sini!
                         <button 
                             onClick={handlePayNow}
                             disabled={isProcessing}
-                            className="px-5 py-2 w-auto md:w-full bg-[#e8ff47] hover:bg-white text-black text-[11px] font-bold rounded-lg transition-colors text-center inline-block disabled:opacity-50"
+                            className="tour-pay-btn px-5 py-2 w-auto md:w-full bg-[#e8ff47] hover:bg-white text-black text-[11px] font-bold rounded-lg transition-colors text-center inline-block disabled:opacity-50"
                         >
                             {isProcessing ? 'Processing...' : 'Pay Now'}
                         </button>
