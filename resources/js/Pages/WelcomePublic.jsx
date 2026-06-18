@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
@@ -18,9 +18,8 @@ export default function WelcomePublic({ publicEvents = [] }) {
         return `/storage/${rawPath}`;
     };
 
-    // FUNGSI JALANIN TOUR BABAK 1
     const startTour = () => {
-        localStorage.setItem('is_tour_active', '1'); // NYALAIN MODE TOUR
+        localStorage.setItem('is_tour_active', '1'); 
         
         const driverObj = driver({
             showProgress: true,
@@ -55,6 +54,15 @@ export default function WelcomePublic({ publicEvents = [] }) {
         driverObj.drive();
     };
 
+    useEffect(() => {
+        if (localStorage.getItem('start_tour_from_help') === '1') {
+            localStorage.removeItem('start_tour_from_help');
+            setTimeout(() => {
+                startTour();
+            }, 500);
+        }
+    }, []);
+
     return (
         <div className="min-h-screen bg-[#050505] text-slate-300 font-sans selection:bg-[#e8ff47] selection:text-black">
             <Head title="EVENTIX LIVE - Official Ticketing Platform" />
@@ -74,7 +82,7 @@ export default function WelcomePublic({ publicEvents = [] }) {
                         <div className="hidden md:flex items-center gap-8 text-sm font-medium">
                             <a href="#events" className="text-white relative group">Explore<span className="absolute -bottom-1.5 left-0 w-full h-[2px] bg-[#e8ff47] rounded-full"></span></a>
                             <a href="#" className="text-slate-400 hover:text-white transition-colors relative group">Cities<span className="absolute -bottom-1.5 left-0 w-0 h-[2px] bg-white rounded-full transition-all duration-300 group-hover:w-full"></span></a>
-                            <a href="#" className="text-slate-400 hover:text-white transition-colors relative group">Help Center<span className="absolute -bottom-1.5 left-0 w-0 h-[2px] bg-white rounded-full transition-all duration-300 group-hover:w-full"></span></a>
+                            <Link href={route('help-center')} className="text-slate-400 hover:text-white transition-colors relative group">Help Center<span className="absolute -bottom-1.5 left-0 w-0 h-[2px] bg-white rounded-full transition-all duration-300 group-hover:w-full"></span></Link>
                         </div>
                     </div>
 
@@ -121,13 +129,6 @@ export default function WelcomePublic({ publicEvents = [] }) {
             </nav>
 
             <section className="pt-36 pb-16 px-6 max-w-[1200px] mx-auto flex flex-col items-center text-center">
-                <button 
-                    onClick={startTour} 
-                    className="mb-6 px-5 py-2 bg-white/5 border border-[#e8ff47]/50 text-white rounded-full font-bold shadow-[0_0_15px_rgba(232,255,71,0.2)] hover:bg-[#e8ff47] hover:text-black transition-all flex items-center gap-2"
-                >
-                    <span className="animate-pulse">💡</span> Panduan Penggunaan Lengkap
-                </button>
-
                 <h1 className="text-5xl md:text-7xl font-black text-white tracking-tighter leading-[1.1] mb-6 max-w-4xl">
                     Official Ticketing Platform for Music & Live Events.
                 </h1>
@@ -242,7 +243,7 @@ export default function WelcomePublic({ publicEvents = [] }) {
 
             <footer className="border-t border-white/5 bg-[#020202] pt-20 pb-10 px-6 mt-12">
                 <div className="max-w-[1200px] mx-auto border-t border-slate-800/80 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-sm font-medium text-slate-500">
-                    <p>© 2026 Eventix Live. All Rights Reserved.</p>
+                    <p>© 2026 Eventix Live. All rights reserved.</p>
                 </div>
             </footer>
         </div>

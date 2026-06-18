@@ -43,6 +43,11 @@ Route::get('/', function () {
     ]); 
 })->name('home');
 
+// RUTE BARU: HELP CENTER (PUBLIC)
+Route::get('/help-center', function () {
+    return Inertia::render('HelpCenter');
+})->name('help-center');
+
 // OAuth Google
 Route::get('auth/google', [GoogleController::class, 'redirect'])->name('google.redirect');
 Route::get('auth/google/callback', [GoogleController::class, 'callback'])->name('google.callback');
@@ -90,7 +95,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/checkout/{event_id}', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout/{event_id}', [CheckoutController::class, 'store'])->name('checkout.store');
     
-    // INI DIA RUTE BARU BUAT BYPASS MIDTRANS POPUP!
+    // RUTE BYPASS MIDTRANS POPUP
     Route::get('/checkout/repay/{orderNo}', [CheckoutController::class, 'repayToken'])->name('checkout.repay');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
