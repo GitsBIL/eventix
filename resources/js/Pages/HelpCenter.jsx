@@ -26,7 +26,7 @@ export default function HelpCenter() {
         },
         { 
             id: 3, 
-            title: 'Manajemen Dashboard Admin', 
+            title: 'Masuk Eventix', 
             url: 'https://drive.google.com/file/d/1vREnr9X21YQHlRZlTjpi9hjRGICNH9uC/preview', 
             duration: '5 min', 
             level: 'Organizer' 
@@ -143,7 +143,6 @@ export default function HelpCenter() {
                         </Link>
                         <div className="hidden md:flex items-center gap-8 text-sm font-medium">
                             <Link href="/#events" className="text-slate-400 hover:text-white transition-colors relative group">Explore</Link>
-                            <a href="#" className="text-slate-400 hover:text-white transition-colors relative group">Cities</a>
                             <Link href={route('help-center')} className="text-white relative group">Help Center<span className="absolute -bottom-1.5 left-0 w-full h-[2px] bg-[#e8ff47] rounded-full"></span></Link>
                         </div>
                     </div>

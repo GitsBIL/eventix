@@ -81,7 +81,6 @@ export default function WelcomePublic({ publicEvents = [] }) {
                         </Link>
                         <div className="hidden md:flex items-center gap-8 text-sm font-medium">
                             <a href="#events" className="text-white relative group">Explore<span className="absolute -bottom-1.5 left-0 w-full h-[2px] bg-[#e8ff47] rounded-full"></span></a>
-                            <a href="#" className="text-slate-400 hover:text-white transition-colors relative group">Cities<span className="absolute -bottom-1.5 left-0 w-0 h-[2px] bg-white rounded-full transition-all duration-300 group-hover:w-full"></span></a>
                             <Link href={route('help-center')} className="text-slate-400 hover:text-white transition-colors relative group">Help Center<span className="absolute -bottom-1.5 left-0 w-0 h-[2px] bg-white rounded-full transition-all duration-300 group-hover:w-full"></span></Link>
                         </div>
                     </div>
@@ -119,8 +118,9 @@ export default function WelcomePublic({ publicEvents = [] }) {
                             </div>
                         ) : (
                             <div className="flex gap-4 items-center">
-                                <Link href={route('login')} className="text-sm font-medium text-slate-400 hover:text-white transition-colors">Log In</Link>
-                                <Link href={route('register')} className="px-5 py-2.5 bg-white text-black text-sm font-bold rounded-lg hover:bg-[#e8ff47] transition shadow-[0_0_15px_rgba(255,255,255,0.1)] hover:shadow-[0_0_20px_rgba(232,255,71,0.2)] hidden sm:block">Sign Up</Link>
+                                <Link href={route('login')} className="px-6 py-2.5 bg-white text-black text-sm font-bold rounded-lg hover:bg-[#e8ff47] transition shadow-[0_0_15px_rgba(255,255,255,0.1)] hover:shadow-[0_0_20px_rgba(232,255,71,0.2)]">
+                                    Log In
+                                </Link>
                             </div>
                         )}
                         <button className="md:hidden text-slate-300 hover:text-white transition"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path></svg></button>

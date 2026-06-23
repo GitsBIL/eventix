@@ -34,7 +34,6 @@ export default function AuthenticatedLayout({ user, header, children }) {
                                 <span className="absolute -bottom-1.5 left-0 w-0 h-[2px] bg-white rounded-full transition-all duration-300 group-hover:w-full"></span>
                             </Link>
                             <Link href="#" className="text-slate-400 hover:text-white transition-colors relative group">
-                                Cities
                                 <span className="absolute -bottom-1.5 left-0 w-0 h-[2px] bg-white rounded-full transition-all duration-300 group-hover:w-full"></span>
                             </Link>
                             {/* Menu My Tickets - Status Aktif */}
